@@ -951,22 +951,33 @@ function renderCoreMapItem(i, layout) {
   const cc=getCoreColor(core.number, layout);
   const textColor=cc.textColor||'white';
   const borderBase=cc.border||'rgba(0,0,0,0.2)';
+  const isKosong=core.status==='kosong';
   return `
   <div class="core-map-item">
-    <button type="button" class="core-map-btn status-${core.status}"
-      style="background:${cc.hex};color:${textColor};border-color:${core.status==='kosong'?borderBase:''}"
-      onclick="toggleCore(${i})" title="Core ${core.number} (${cc.name}) - ${STATUS_LABELS[core.status]}">
-      ${core.number}
-      <span class="core-btn-color-name">${cc.name}</span>
-    </button>
+    <div style="position:relative;display:inline-block">
+      <button type="button" class="core-map-btn status-${core.status}"
+        style="background:${cc.hex};color:${textColor};border-color:${isKosong?borderBase:''};${!isKosong?'cursor:default;':'cursor:pointer;'}"
+        ${isKosong?`onclick="toggleCore(${i})"`:''}
+        title="Core ${core.number} (${cc.name}) - ${STATUS_LABELS[core.status]}">
+        ${core.number}
+        <span class="core-btn-color-name">${cc.name}</span>
+      </button>
+      ${!isKosong?`<button type="button" onclick="resetCore(${i})" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:white;border:2px solid white;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1" title="Reset ke kosong">&times;</button>`:''}
+    </div>
     <span class="core-map-status-text s-${core.status}">${STATUS_LABELS[core.status]}</span>
-    <input class="core-map-label" type="text" value="${esc(core.label)}" placeholder="ket." onchange="updateCoreLabel(${i},this.value)">
+    ${isKosong?`<div style="height:22px"></div>`:`<input class="core-map-label" type="text" value="${esc(core.label)}" placeholder="ket." onchange="updateCoreLabel(${i},this.value)" id="coreInput${i}">`}
   </div>`;
 }
 
 function toggleCore(i) {
-  const cur=STATUS_CYCLE.indexOf(currentCoreData[i].status);
-  currentCoreData[i].status=STATUS_CYCLE[(cur+1)%STATUS_CYCLE.length];
+  if(currentCoreData[i].status!=='kosong') return;
+  currentCoreData[i].status='terpakai';
+  renderCoreMapInputs();
+  setTimeout(()=>{const inp=document.getElementById('coreInput'+i);if(inp)inp.focus();},50);
+}
+function resetCore(i) {
+  currentCoreData[i].status='kosong';
+  currentCoreData[i].label='';
   renderCoreMapInputs();
 }
 function updateCoreLabel(i,v) { currentCoreData[i].label=v.trim(); }

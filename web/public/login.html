@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Pemetaan Core FO</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,sans-serif; background:#f3f4f6; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.card { background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); width:380px; overflow:hidden; }
+.card-header { background:linear-gradient(135deg,#1e3a8a,#1a56db); color:white; padding:24px; text-align:center; }
+.card-header h1 { font-size:18px; margin-bottom:4px; }
+.card-header p { font-size:12px; opacity:0.8; }
+.card-body { padding:24px; }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:4px; }
+.form-group input { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; }
+.form-group input:focus { outline:none; border-color:#1a56db; box-shadow:0 0 0 3px #dbeafe; }
+.btn { width:100%; padding:10px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.btn-primary { background:#1a56db; color:white; }
+.btn-primary:hover { background:#1e3a8a; }
+.btn-outline { background:white; border:1px solid #d1d5db; color:#374151; margin-top:8px; }
+.btn-outline:hover { background:#f9fafb; }
+.error { color:#dc2626; font-size:12px; margin-bottom:12px; display:none; padding:8px 12px; background:#fee2e2; border-radius:6px; }
+.error.show { display:block; }
+.tabs { display:flex; border-bottom:1px solid #e5e7eb; margin-bottom:20px; }
+.tab { flex:1; padding:10px; text-align:center; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; color:#6b7280; }
+.tab.active { color:#1a56db; border-bottom-color:#1a56db; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <h1>Pemetaan Core Fiber Optic</h1>
+    <p>Sistem Dokumentasi FO</p>
+  </div>
+  <div class="card-body">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Login</div>
+      <div class="tab" onclick="switchTab('register')">Daftar</div>
+    </div>
+    <div id="error" class="error"></div>
+    <div id="loginForm">
+      <div class="form-group"><label>Username</label><input type="text" id="loginUser" autocomplete="username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="loginPass" autocomplete="current-password"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Masuk</button>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="form-group"><label>Username</label><input type="text" id="regUser" autocomplete="username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="regPass" autocomplete="new-password"></div>
+      <div class="form-group"><label>Ulangi Password</label><input type="password" id="regPass2" autocomplete="new-password"></div>
+      <button class="btn btn-primary" onclick="doRegister()">Daftar</button>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active', (t==='login'?i===0:i===1));
+  });
+  document.getElementById('loginForm').style.display = t==='login'?'':'none';
+  document.getElementById('registerForm').style.display = t==='register'?'':'none';
+  document.getElementById('error').classList.remove('show');
+}
+
+function showErr(msg) {
+  const e=document.getElementById('error');
+  e.textContent=msg; e.classList.add('show');
+}
+
+async function doLogin() {
+  const username=document.getElementById('loginUser').value.trim();
+  const password=document.getElementById('loginPass').value;
+  if(!username||!password) return showErr('Isi username dan password');
+  try {
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const d=await r.json();
+    if(!r.ok) return showErr(d.error);
+    window.location='/';
+  } catch { showErr('Gagal terhubung ke server'); }
+}
+
+async function doRegister() {
+  const username=document.getElementById('regUser').value.trim();
+  const password=document.getElementById('regPass').value;
+  const password2=document.getElementById('regPass2').value;
+  if(!username||!password) return showErr('Isi username dan password');
+  if(password!==password2) return showErr('Password tidak cocok');
+  try {
+    const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const d=await r.json();
+    if(!r.ok) return showErr(d.error);
+    window.location='/';
+  } catch { showErr('Gagal terhubung ke server'); }
+}
+
+document.querySelectorAll('input').forEach(el=>{
+  el.addEventListener('keydown',e=>{ if(e.key==='Enter') {
+    const form=el.closest('#loginForm')?'login':'register';
+    form==='login'?doLogin():doRegister();
+  }});
+});
+</script>
+</body>
+</html>

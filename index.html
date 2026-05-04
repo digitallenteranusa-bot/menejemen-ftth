@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemetaan Core Fiber Optic</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<style>
+:root {
+  --primary: #1a56db;
+  --primary-dark: #1e3a8a;
+  --primary-light: #dbeafe;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #f59e0b;
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+  --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+  --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--gray-100); color:var(--gray-800); font-size:14px; }
+
+/* APP LAYOUT */
+#app { display:flex; flex-direction:column; height:100vh; }
+header {
+  background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+  color:white; padding:10px 20px; display:flex; align-items:center;
+  justify-content:space-between; box-shadow:var(--shadow-lg); z-index:10;
+}
+header h1 { font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.header-actions { display:flex; gap:8px; align-items:center; }
+.header-actions select {
+  padding:6px 12px; border-radius:var(--radius); border:1px solid rgba(255,255,255,0.3);
+  background:rgba(255,255,255,0.15); color:white; font-size:13px; cursor:pointer; min-width:180px;
+}
+.header-actions select option { color:var(--gray-800); background:white; }
+.main-layout { display:flex; flex:1; overflow:hidden; }
+
+/* SIDEBAR */
+#sidebar {
+  width:310px; min-width:310px; background:white; border-right:1px solid var(--gray-200);
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+.sidebar-section { padding:14px 16px; border-bottom:1px solid var(--gray-200); }
+.sidebar-section h3 {
+  font-size:11px; text-transform:uppercase; letter-spacing:0.5px;
+  color:var(--gray-500); margin-bottom:10px; font-weight:600;
+}
+.device-item {
+  display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px;
+  cursor:pointer; margin-bottom:3px; transition:background 0.15s;
+}
+.device-item:hover { background:var(--gray-100); }
+.device-type-badge {
+  font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px;
+  min-width:40px; text-align:center; color:white; flex-shrink:0;
+}
+.badge-olt { background:#7c3aed; }
+.badge-otb { background:#2563eb; }
+.badge-odc { background:#0891b2; }
+.badge-odp { background:#16a34a; }
+.badge-tiang { background:#d97706; }
+.device-item-info { flex:1; min-width:0; }
+.device-item-name { font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.device-item-loc { font-size:11px; color:var(--gray-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.device-item-actions { display:flex; gap:2px; opacity:0; transition:opacity 0.15s; }
+.device-item:hover .device-item-actions { opacity:1; }
+
+/* BUTTONS */
+.btn {
+  padding:6px 14px; border-radius:6px; border:none; cursor:pointer;
+  font-size:13px; font-weight:500; display:inline-flex; align-items:center;
+  gap:4px; transition:all 0.15s;
+}
+.btn-primary { background:var(--primary); color:white; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-success { background:var(--success); color:white; }
+.btn-success:hover { background:#15803d; }
+.btn-danger { background:var(--danger); color:white; }
+.btn-danger:hover { background:#b91c1c; }
+.btn-outline { background:white; border:1px solid var(--gray-300); color:var(--gray-700); }
+.btn-outline:hover { background:var(--gray-50); }
+.btn-sm { padding:4px 8px; font-size:12px; }
+.btn-icon { padding:4px 6px; font-size:14px; background:none; border:none; cursor:pointer; border-radius:4px; }
+.btn-icon:hover { background:var(--gray-200); }
+.btn-block { width:100%; justify-content:center; }
+.btn-print { background:rgba(255,255,255,0.2); color:white; border:1px solid rgba(255,255,255,0.3); }
+.btn-print:hover { background:rgba(255,255,255,0.3); }
+.btn-xs { padding:2px 6px; font-size:11px; border-radius:4px; }
+
+/* MAIN CONTENT */
+main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.tabs { display:flex; background:white; border-bottom:1px solid var(--gray-200); padding:0 16px; }
+.tab {
+  padding:12px 20px; border:none; background:none; cursor:pointer;
+  font-size:13px; font-weight:500; color:var(--gray-500);
+  border-bottom:2px solid transparent; transition:all 0.15s;
+}
+.tab:hover { color:var(--gray-700); }
+.tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+.tab-content { display:none; flex:1; overflow:auto; padding:20px; }
+.tab-content.active { display:block; }
+
+/* DIAGRAM */
+.diagram-container { min-width:fit-content; }
+.tree-children { margin-left:28px; border-left:2px solid var(--gray-300); }
+.tree-child { position:relative; padding-left:28px; }
+.tree-child::before {
+  content:''; position:absolute; left:0; top:24px;
+  width:28px; border-top:2px solid var(--gray-300);
+}
+.tree-child:last-child::after {
+  content:''; position:absolute; left:-2px; top:26px; bottom:0; width:4px; background:white;
+}
+.node-box {
+  display:inline-flex; align-items:center; gap:8px; padding:8px 14px;
+  border:2px solid var(--gray-300); border-radius:var(--radius);
+  background:white; margin:6px 0; box-shadow:var(--shadow);
+  cursor:pointer; transition:all 0.15s;
+}
+.node-box:hover { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light); }
+.node-name { font-weight:600; font-size:13px; }
+.node-loc { font-size:11px; color:var(--gray-500); }
+.conn-label {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; color:var(--gray-600); margin:2px 0 2px 8px;
+  background:var(--gray-100); padding:3px 10px; border-radius:10px;
+}
+.core-mini { display:inline-flex; gap:2px; margin-left:4px; }
+.core-mini-dot { width:10px; height:10px; border-radius:2px; display:inline-block; border:1px solid rgba(0,0,0,0.15); }
+
+.empty-state { text-align:center; padding:60px 20px; color:var(--gray-400); }
+.empty-state .icon { font-size:48px; margin-bottom:16px; }
+.empty-state h3 { font-size:16px; margin-bottom:8px; color:var(--gray-500); }
+
+/* TABLE VIEW */
+.stats-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.stat-card { background:white; border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 18px; flex:1; min-width:130px; }
+.stat-value { font-size:24px; font-weight:700; color:var(--primary-dark); }
+.stat-label { font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+.segment-card { background:white; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; overflow:hidden; }
+.segment-header {
+  padding:12px 16px; background:var(--gray-50); border-bottom:1px solid var(--gray-200);
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+}
+.segment-title { font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px; }
+.segment-meta { font-size:12px; color:var(--gray-500); }
+
+.core-table { width:100%; border-collapse:collapse; }
+.core-table th {
+  padding:8px 12px; text-align:left; font-size:11px; text-transform:uppercase;
+  letter-spacing:0.5px; color:var(--gray-500); font-weight:600;
+  border-bottom:1px solid var(--gray-200); background:var(--gray-50);
+}
+.core-table td { padding:6px 12px; border-bottom:1px solid var(--gray-100); font-size:13px; vertical-align:middle; }
+.core-table tr:last-child td { border-bottom:none; }
+.core-table tr:hover td { background:var(--gray-50); }
+.core-color-dot {
+  width:20px; height:20px; border-radius:4px; display:inline-block;
+  border:2px solid rgba(0,0,0,0.15); vertical-align:middle;
+}
+.core-num-cell { display:flex; align-items:center; gap:8px; }
+.core-num { font-weight:700; font-size:13px; min-width:20px; }
+.core-color-name { font-size:11px; color:var(--gray-500); }
+.status-badge {
+  font-size:11px; font-weight:600; padding:2px 10px; border-radius:10px; display:inline-block;
+}
+.status-terpakai { background:#fee2e2; color:#991b1b; }
+.status-kosong { background:#dcfce7; color:#166534; }
+.status-cadangan { background:#fef3c7; color:#92400e; }
+
+/* TUBE HEADER with color indicator */
+.tube-header {
+  padding:8px 12px; font-weight:700; font-size:12px; color:white;
+  border-bottom:1px solid var(--gray-200);
+  text-transform:uppercase; letter-spacing:0.5px;
+  display:flex; align-items:center; gap:8px;
+}
+.tube-color-dot {
+  width:16px; height:16px; border-radius:4px; border:2px solid rgba(255,255,255,0.5);
+  flex-shrink:0;
+}
+
+/* CORE VISUAL STRIP */
+.core-visual-strip {
+  display:flex; flex-wrap:wrap; gap:3px; padding:10px 16px;
+  border-bottom:1px solid var(--gray-200); background:white;
+}
+.core-visual-item { display:flex; flex-direction:column; align-items:center; gap:2px; width:44px; }
+.core-visual-box {
+  width:32px; height:32px; border-radius:6px; display:flex; align-items:center;
+  justify-content:center; font-weight:800; font-size:11px; color:white;
+  border:2px solid rgba(0,0,0,0.15); position:relative;
+}
+.core-visual-box.status-terpakai::after {
+  content:''; position:absolute; inset:0; border-radius:4px;
+  background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(0,0,0,0.15) 3px,rgba(0,0,0,0.15) 5px);
+}
+.core-visual-box.status-cadangan::after {
+  content:''; position:absolute; inset:3px; border:2px dashed rgba(255,255,255,0.7); border-radius:3px;
+}
+.core-visual-label {
+  font-size:9px; color:var(--gray-500); text-align:center; max-width:44px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.core-visual-status { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+.core-visual-status.s-terpakai { color:var(--danger); }
+.core-visual-status.s-kosong { color:var(--success); }
+.core-visual-status.s-cadangan { color:var(--warning); }
+
+/* Tube separator in visual strip */
+.tube-sep {
+  width:2px; background:var(--gray-300); align-self:stretch; margin:0 4px; border-radius:1px;
+}
+.tube-sep-label {
+  writing-mode:vertical-rl; font-size:8px; font-weight:700; color:var(--gray-400);
+  text-transform:uppercase; letter-spacing:1px; padding:2px; align-self:center;
+}
+
+/* MODAL */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100;
+  display:none; align-items:center; justify-content:center; backdrop-filter:blur(2px);
+}
+.modal-overlay.show { display:flex; }
+.modal {
+  background:white; border-radius:12px; box-shadow:var(--shadow-lg);
+  width:92%; max-width:560px; max-height:90vh; overflow-y:auto;
+}
+.modal-header {
+  padding:14px 20px; border-bottom:1px solid var(--gray-200);
+  display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; z-index:1;
+}
+.modal-header h2 { font-size:16px; font-weight:600; }
+.modal-body { padding:20px; }
+.modal-footer {
+  padding:12px 20px; border-top:1px solid var(--gray-200);
+  display:flex; justify-content:flex-end; gap:8px; position:sticky; bottom:0; background:white;
+}
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:12px; font-weight:600; color:var(--gray-600); margin-bottom:4px; }
+.form-group input,.form-group select,.form-group textarea {
+  width:100%; padding:8px 12px; border:1px solid var(--gray-300);
+  border-radius:6px; font-size:13px; font-family:inherit; transition:border-color 0.15s;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus {
+  outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-light);
+}
+.form-group textarea { resize:vertical; min-height:50px; }
+.form-row { display:flex; gap:12px; }
+.form-row .form-group { flex:1; }
+
+/* CORE MAPPING in Modal */
+.core-legend {
+  display:flex; gap:12px; margin:8px 0 12px; flex-wrap:wrap; padding:8px 12px;
+  background:var(--gray-50); border-radius:6px; border:1px solid var(--gray-200);
+}
+.core-legend-item { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--gray-600); }
+.core-legend-dot { width:14px; height:14px; border-radius:3px; border:1px solid rgba(0,0,0,0.1); }
+.core-map-section { margin-bottom:16px; }
+.core-map-section-title {
+  font-size:12px; font-weight:700; padding:8px 12px; border-radius:6px;
+  margin-bottom:8px; display:flex; align-items:center; gap:8px; color:white;
+}
+.core-map-grid { display:flex; flex-wrap:wrap; gap:6px; }
+.core-map-item { width:70px; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.core-map-btn {
+  width:42px; height:42px; border-radius:8px; border:3px solid rgba(0,0,0,0.2);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-weight:800; font-size:13px; color:white; cursor:pointer; transition:all 0.15s;
+  position:relative;
+}
+.core-map-btn:hover { transform:scale(1.1); box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+.core-map-btn .core-btn-color-name { font-size:7px; font-weight:600; opacity:0.8; text-transform:uppercase; }
+.core-map-btn.status-terpakai { border-color:var(--danger); box-shadow:0 0 0 2px #fecaca; }
+.core-map-btn.status-cadangan { border-color:var(--warning); box-shadow:0 0 0 2px #fef3c7; }
+.core-map-btn.status-kosong { border-color:rgba(0,0,0,0.15); opacity:0.7; }
+.core-map-label {
+  width:100%; font-size:10px; text-align:center; padding:2px 3px;
+  border:1px solid var(--gray-200); border-radius:4px;
+}
+.core-map-label:focus { border-color:var(--primary); }
+.core-map-status-text { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+.core-map-status-text.s-terpakai { color:var(--danger); }
+.core-map-status-text.s-kosong { color:var(--success); }
+.core-map-status-text.s-cadangan { color:#b45309; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:20px; right:20px; background:var(--gray-800); color:white;
+  padding:10px 20px; border-radius:8px; font-size:13px; z-index:300;
+  box-shadow:var(--shadow-lg); transition:opacity 0.3s,transform 0.3s;
+  opacity:0; transform:translateY(10px);
+}
+.toast.show { opacity:1; transform:translateY(0); }
+
+/* PRINT STYLES */
+#printView { display:none; }
+@media print {
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  body { background:white !important; font-size:10px; }
+  #app { display:none !important; }
+  #printView { display:block !important; }
+  .print-page { page-break-after:always; padding:15mm 12mm; position:relative; }
+  .print-page:last-child { page-break-after:avoid; }
+  .print-header { text-align:center; border:2px solid #333; padding:16px; margin-bottom:20px; }
+  .print-header h1 { font-size:16px; margin-bottom:4px; }
+  .print-header h2 { font-size:13px; font-weight:400; color:#555; margin-bottom:10px; }
+  .print-meta { font-size:10px; color:#666; }
+  .print-meta span { margin:0 10px; }
+  .print-section-title {
+    font-size:13px; font-weight:700; border-bottom:2px solid #333;
+    padding-bottom:4px; margin:14px 0 10px;
+  }
+  .print-tree .node-box { box-shadow:none; border:1.5px solid #555; padding:4px 10px; margin:4px 0; font-size:11px; }
+  .print-tree .tree-children { border-left-color:#555; }
+  .print-tree .tree-child::before { border-top-color:#555; }
+  .print-tree .conn-label { font-size:9px; }
+  .print-core-strip { display:flex; flex-wrap:wrap; gap:2px; margin:4px 0; }
+  .print-core-box {
+    width:22px; height:22px; border-radius:3px; display:flex; align-items:center;
+    justify-content:center; font-weight:800; font-size:8px; color:white;
+    border:1px solid rgba(0,0,0,0.2);
+  }
+  .print-tube-title {
+    font-weight:700; font-size:10px; padding:4px 8px; margin:8px 0 3px;
+    border-radius:4px; color:white; display:inline-flex; align-items:center; gap:4px;
+  }
+  .print-core-table { width:100%; border-collapse:collapse; margin-bottom:8px; font-size:10px; }
+  .print-core-table th,.print-core-table td { border:1px solid #999; padding:3px 6px; }
+  .print-core-table th { background:#e5e7eb; font-weight:700; font-size:9px; text-transform:uppercase; }
+  .print-summary-table { width:100%; border-collapse:collapse; font-size:10px; }
+  .print-summary-table th,.print-summary-table td { border:1px solid #999; padding:3px 6px; text-align:left; }
+  .print-summary-table th { background:#e5e7eb; font-weight:700; }
+  .print-segment-header { font-weight:700; font-size:11px; margin:10px 0 4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .print-footer {
+    position:absolute; bottom:10mm; left:12mm; right:12mm;
+    text-align:center; font-size:8px; color:#999; border-top:1px solid #ddd; padding-top:4px;
+  }
+  .print-color-legend { display:flex; flex-wrap:wrap; gap:3px; margin:6px 0 10px; }
+  .print-color-legend-item { display:flex; align-items:center; gap:3px; font-size:9px; padding:1px 4px; border:1px solid #ccc; border-radius:3px; }
+  .print-color-legend-dot { width:12px; height:12px; border-radius:2px; border:1px solid rgba(0,0,0,0.15); }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <h1>&#128225; Pemetaan Core Fiber Optic</h1>
+    <div class="header-actions">
+      <select id="projectSelect" onchange="switchProject(this.value)">
+        <option value="">-- Pilih Proyek --</option>
+      </select>
+      <button class="btn btn-sm btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="showAddProject()">+ Proyek</button>
+      <button class="btn btn-sm btn-print" onclick="exportJSON()">&#128190; Ekspor</button>
+      <button class="btn btn-sm btn-print" onclick="document.getElementById('importFile').click()">&#128194; Impor</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="btn btn-sm btn-print" onclick="printDocument()">&#128424; Cetak / PDF</button>
+    </div>
+  </header>
+  <div class="main-layout">
+    <aside id="sidebar">
+      <div class="sidebar-section" id="projectInfo" style="display:none">
+        <h3>Proyek Aktif</h3>
+        <div id="projectInfoContent"></div>
+      </div>
+      <div class="sidebar-section" style="padding-bottom:8px">
+        <input type="text" id="sidebarSearch" placeholder="Cari perangkat / koneksi..." oninput="onSidebarSearch()" style="width:100%;padding:7px 10px;border:1px solid var(--gray-300);border-radius:6px;font-size:12px">
+      </div>
+      <div class="sidebar-section">
+        <h3>Perangkat <span id="deviceCount" style="font-weight:400;color:var(--gray-400)"></span></h3>
+        <div id="deviceList"></div>
+        <button class="btn btn-sm btn-primary btn-block" onclick="showAddDevice()" style="margin-top:8px">+ Tambah Perangkat</button>
+      </div>
+      <div class="sidebar-section">
+        <h3>Koneksi Kabel <span id="connCount" style="font-weight:400;color:var(--gray-400)"></span></h3>
+        <div id="connectionList"></div>
+        <button class="btn btn-sm btn-success btn-block" onclick="showAddConnection()" style="margin-top:8px">+ Tambah Koneksi</button>
+      </div>
+      <div class="sidebar-section">
+        <h3>Ringkasan</h3>
+        <div id="summaryPanel"></div>
+      </div>
+    </aside>
+    <main>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('diagram',this)">Diagram Topologi</button>
+        <button class="tab" onclick="switchTab('table',this)">Tabel Detail Core</button>
+        <button class="tab" onclick="switchTab('legend',this)">Referensi Warna</button>
+      </div>
+      <div id="diagramView" class="tab-content active"></div>
+      <div id="tableView" class="tab-content"></div>
+      <div id="legendView" class="tab-content"></div>
+    </main>
+  </div>
+</div>
+
+<div id="printView"></div>
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="projectModalTitle">Proyek Baru</h2><button class="btn-icon" onclick="hideModal('projectModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="projectId">
+      <div class="form-group"><label>Nama Proyek</label><input type="text" id="projectName" placeholder="contoh: Cluster Perumahan ABC"></div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="projectDesc" placeholder="Keterangan proyek..."></textarea></div>
+      <div class="form-group"><label>Teknisi / PIC</label><input type="text" id="projectPic" placeholder="Nama penanggung jawab"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="hideModal('projectModal')">Batal</button>
+      <button class="btn btn-primary" onclick="saveProject()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Device Modal -->
+<div class="modal-overlay" id="deviceModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="deviceModalTitle">Tambah Perangkat</h2><button class="btn-icon" onclick="hideModal('deviceModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="deviceId">
+      <div class="form-row">
+        <div class="form-group"><label>Tipe Perangkat</label>
+          <select id="deviceType" onchange="onDeviceTypeChange()">
+            <option value="OLT">OLT (Optical Line Terminal)</option>
+            <option value="OTB">OTB (Optical Terminal Box)</option>
+            <option value="ODC">ODC (Optical Distribution Cabinet)</option>
+            <option value="ODP">ODP (Optical Distribution Point)</option>
+            <option value="TIANG">Tiang</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Nama / Label</label><input type="text" id="deviceName" placeholder="contoh: OLT-01"></div>
+      </div>
+      <div class="form-group"><label>Lokasi</label><input type="text" id="deviceLocation" placeholder="contoh: Jl. Merdeka No.1"></div>
+      <div class="form-group" id="splitterGroup" style="display:none">
+        <label>Splitter</label>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <select id="deviceSplitterRatio">
+              <option value="">Tanpa Splitter</option>
+              <option value="1:2">1:2</option>
+              <option value="1:4">1:4</option>
+              <option value="1:8">1:8</option>
+              <option value="1:16">1:16</option>
+              <option value="1:32">1:32</option>
+              <option value="1:64">1:64</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <input type="number" id="deviceSplitterQty" placeholder="Jumlah splitter" min="1" value="1">
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <label style="font-size:11px">Sumber Input Splitter (core masuk ke splitter)</label>
+          <input type="text" id="deviceSplitterInput" placeholder="contoh: Core 1 Biru, Tube Biru dari OTB">
+        </div>
+      </div>
+      <div class="form-group"><label>Catatan</label><textarea id="deviceNotes" placeholder="Catatan tambahan..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="hideModal('deviceModal')">Batal</button>
+      <button class="btn btn-primary" onclick="saveDevice()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Connection Modal -->
+<div class="modal-overlay" id="connectionModal">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-header"><h2 id="connectionModalTitle">Tambah Koneksi Kabel</h2><button class="btn-icon" onclick="hideModal('connectionModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="connId">
+      <div class="form-row">
+        <div class="form-group"><label>Dari Perangkat</label><select id="connFrom" onchange="onConnDeviceChange()"></select></div>
+        <div class="form-group"><label>Ke Perangkat</label><select id="connTo" onchange="onConnDeviceChange()"></select></div>
+      </div>
+      <div id="splitterHint" style="display:none;padding:8px 12px;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;margin-bottom:12px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:6px"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Jumlah Core Kabel</label>
+          <select id="connCoreCount" onchange="onCoreCountChange()">
+            <option value="1">1 Core</option><option value="2">2 Core</option>
+            <option value="4">4 Core</option><option value="6">6 Core</option>
+            <option value="8">8 Core</option><option value="12" selected>12 Core</option>
+            <option value="24">24 Core</option>
+          </select>
+        </div>
+        <div class="form-group" id="tubeConfigGroup" style="display:none">
+          <label>Konfigurasi Tube</label>
+          <select id="connTubeConfig" onchange="renderCoreMapInputs()">
+            <option value="2x12">2 Tube x 12 Core</option>
+            <option value="4x6" selected>4 Tube x 6 Core (ADSS)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Panjang Kabel (meter)</label><input type="number" id="connLength" placeholder="opsional"></div>
+        <div class="form-group" id="splitterPortGroup" style="display:none">
+          <label id="splitterPortLabel">Port Splitter Output</label>
+          <select id="connSplitterPort">
+            <option value="">-- Tidak pakai splitter --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Label / Keterangan</label><input type="text" id="connLabel" placeholder="contoh: Feeder utara"></div>
+      </div>
+      <div class="form-group">
+        <label>Pemetaan Core (klik core untuk ubah status)</label>
+        <div class="core-legend" style="justify-content:space-between">
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="core-legend-item"><div class="core-legend-dot" style="background:#bbf7d0;border-color:#86efac"></div> Kosong</div>
+            <div class="core-legend-item"><div class="core-legend-dot" style="background:#fca5a5;border-color:#f87171"></div> Terpakai</div>
+            <div class="core-legend-item"><div class="core-legend-dot" style="background:#fde68a;border-color:#fbbf24"></div> Cadangan</div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button type="button" class="btn btn-xs btn-primary" onclick="autoFillBySplitter()" title="Isi otomatis berdasarkan splitter">Isi Otomatis</button>
+            <button type="button" class="btn btn-xs btn-outline" onclick="resetAllCores()" title="Reset semua ke kosong">Reset</button>
+          </div>
+        </div>
+        <div id="coreMapContainer"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="hideModal('connectionModal')">Batal</button>
+      <button class="btn btn-primary" onclick="saveConnection()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2>Konfirmasi Hapus</h2><button class="btn-icon" onclick="hideModal('deleteModal')">&times;</button></div>
+    <div class="modal-body"><p id="deleteMessage">Yakin ingin menghapus?</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="hideModal('deleteModal')">Batal</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CORE_COLORS_6 = [
+  { id:1, name:'Biru',    hex:'#2563eb' },
+  { id:2, name:'Jingga',  hex:'#ea580c' },
+  { id:3, name:'Hijau',   hex:'#16a34a' },
+  { id:4, name:'Coklat',  hex:'#92400e' },
+  { id:5, name:'Abu-abu', hex:'#6b7280' },
+  { id:6, name:'Putih',   hex:'#f1f5f9', textColor:'#334155', border:'#94a3b8' },
+];
+
+// 12 warna lengkap per tube
+const CORE_COLORS_12 = [
+  ...CORE_COLORS_6,
+  { id:7,  name:'Merah',  hex:'#dc2626' },
+  { id:8,  name:'Hitam',  hex:'#1e293b' },
+  { id:9,  name:'Kuning', hex:'#eab308', textColor:'#422006' },
+  { id:10, name:'Ungu',   hex:'#7c3aed' },
+  { id:11, name:'Pink',   hex:'#ec4899' },
+  { id:12, name:'Tosca',  hex:'#06b6d4' },
+];
+
+// Warna tube (sama dengan 4 warna pertama standar)
+const TUBE_COLORS = [
+  { name:'Biru',   hex:'#2563eb', bg:'#2563eb' },
+  { name:'Jingga', hex:'#ea580c', bg:'#ea580c' },
+  { name:'Hijau',  hex:'#16a34a', bg:'#16a34a' },
+  { name:'Coklat', hex:'#92400e', bg:'#92400e' },
+];
+
+// Menentukan konfigurasi tube berdasarkan jumlah core dan setting
+// tubeConfig: "4x6" = 4 tube x 6 core, "2x12" = 2 tube x 12 core, null = otomatis
+function getTubeLayout(coreCount, tubeConfig) {
+  if (coreCount <= 6) return { tubeCount:1, coresPerTube:coreCount, colorSet:'6' };
+  if (coreCount <= 8) return { tubeCount:1, coresPerTube:coreCount, colorSet:'12' };
+  if (coreCount === 12) return { tubeCount:1, coresPerTube:12, colorSet:'12' };
+  if (coreCount === 24) {
+    if (tubeConfig === '2x12') return { tubeCount:2, coresPerTube:12, colorSet:'12' };
+    return { tubeCount:4, coresPerTube:6, colorSet:'6' }; // default ADSS
+  }
+  return { tubeCount:1, coresPerTube:coreCount, colorSet:'12' };
+}
+
+function getCoreColor(coreNumber, tubeLayout) {
+  const cpt = tubeLayout ? tubeLayout.coresPerTube : 12;
+  const colorSet = (tubeLayout && tubeLayout.colorSet === '6') ? CORE_COLORS_6 : CORE_COLORS_12;
+  const idx = ((coreNumber - 1) % cpt) % colorSet.length;
+  return colorSet[idx];
+}
+
+function getTubeForCore(coreNumber, tubeLayout) {
+  if (!tubeLayout || tubeLayout.tubeCount <= 1) return 0;
+  return Math.floor((coreNumber - 1) / tubeLayout.coresPerTube);
+}
+
+function getTubeColor(tubeIndex) {
+  return TUBE_COLORS[tubeIndex % TUBE_COLORS.length];
+}
+
+const DEVICE_TYPES = ['OLT','OTB','ODC','ODP','TIANG'];
+const DEVICE_ORDER = {OLT:0,OTB:1,ODC:2,ODP:3,TIANG:4};
+const STATUS_CYCLE = ['kosong','terpakai','cadangan'];
+const STATUS_LABELS = {kosong:'Kosong',terpakai:'Terpakai',cadangan:'Cadangan'};
+
+let appData = { projects:[] };
+let currentProjectId = null;
+let currentCoreData = null;
+
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function load() { try { appData=JSON.parse(localStorage.getItem('fiberOpticApp')||'{"projects":[]}'); } catch { appData={projects:[]}; } }
+function save() { localStorage.setItem('fiberOpticApp',JSON.stringify(appData)); }
+function getProject() { return appData.projects.find(p=>p.id===currentProjectId)||null; }
+function esc(s) { if(!s)return''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function toast(m) { const e=document.getElementById('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2500); }
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function switchTab(tab,btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(tab+'View').classList.add('active');
+}
+
+function showDeleteConfirm(msg,onConfirm) {
+  document.getElementById('deleteMessage').textContent=msg;
+  const btn=document.getElementById('deleteConfirmBtn');
+  const nb=btn.cloneNode(true); btn.parentNode.replaceChild(nb,btn);
+  nb.addEventListener('click',()=>{hideModal('deleteModal');onConfirm();});
+  showModal('deleteModal');
+}
+
+// ===== PROJECT =====
+function renderProjectSelect() {
+  const s=document.getElementById('projectSelect');
+  s.innerHTML='<option value="">-- Pilih Proyek --</option>'+appData.projects.map(p=>`<option value="${p.id}" ${p.id===currentProjectId?'selected':''}>${esc(p.name)}</option>`).join('');
+}
+function switchProject(id) { currentProjectId=id||null; renderAll(); }
+function showAddProject() {
+  document.getElementById('projectModalTitle').textContent='Proyek Baru';
+  document.getElementById('projectId').value='';
+  document.getElementById('projectName').value='';
+  document.getElementById('projectDesc').value='';
+  document.getElementById('projectPic').value='';
+  showModal('projectModal');
+}
+function showEditProject() {
+  const p=getProject(); if(!p)return;
+  document.getElementById('projectModalTitle').textContent='Edit Proyek';
+  document.getElementById('projectId').value=p.id;
+  document.getElementById('projectName').value=p.name;
+  document.getElementById('projectDesc').value=p.description||'';
+  document.getElementById('projectPic').value=p.pic||'';
+  showModal('projectModal');
+}
+function saveProject() {
+  const id=document.getElementById('projectId').value;
+  const name=document.getElementById('projectName').value.trim();
+  if(!name) return toast('Nama proyek wajib diisi');
+  const desc=document.getElementById('projectDesc').value.trim();
+  const pic=document.getElementById('projectPic').value.trim();
+  if(id) { const p=appData.projects.find(x=>x.id===id); if(p){p.name=name;p.description=desc;p.pic=pic;} }
+  else { const p={id:uid(),name,description:desc,pic,devices:[],connections:[]}; appData.projects.push(p); currentProjectId=p.id; }
+  save(); hideModal('projectModal'); renderAll(); toast('Proyek disimpan');
+}
+function deleteProject() {
+  showDeleteConfirm('Hapus proyek ini beserta semua datanya?',()=>{
+    appData.projects=appData.projects.filter(p=>p.id!==currentProjectId);
+    currentProjectId=appData.projects.length?appData.projects[0].id:null;
+    save(); renderAll(); toast('Proyek dihapus');
+  });
+}
+
+// ===== DEVICE =====
+function onDeviceTypeChange() {
+  const type=document.getElementById('deviceType').value;
+  document.getElementById('splitterGroup').style.display=(type==='ODC')?'':'none';
+}
+function showAddDevice() {
+  if(!getProject()) return toast('Pilih atau buat proyek dulu');
+  document.getElementById('deviceModalTitle').textContent='Tambah Perangkat';
+  document.getElementById('deviceId').value='';
+  document.getElementById('deviceType').value='OLT';
+  document.getElementById('deviceName').value='';
+  document.getElementById('deviceLocation').value='';
+  document.getElementById('deviceSplitterRatio').value='';
+  document.getElementById('deviceSplitterQty').value='1';
+  document.getElementById('deviceSplitterInput').value='';
+  document.getElementById('splitterGroup').style.display='none';
+  document.getElementById('deviceNotes').value='';
+  showModal('deviceModal');
+}
+function showEditDevice(did) {
+  const p=getProject(); if(!p)return;
+  const d=p.devices.find(x=>x.id===did); if(!d)return;
+  document.getElementById('deviceModalTitle').textContent='Edit Perangkat';
+  document.getElementById('deviceId').value=d.id;
+  document.getElementById('deviceType').value=d.type;
+  document.getElementById('deviceName').value=d.name;
+  document.getElementById('deviceLocation').value=d.location||'';
+  const hasSplitter=(d.type==='ODC');
+  document.getElementById('splitterGroup').style.display=hasSplitter?'':'none';
+  document.getElementById('deviceSplitterRatio').value=d.splitterRatio||'';
+  document.getElementById('deviceSplitterQty').value=d.splitterQty||1;
+  document.getElementById('deviceSplitterInput').value=d.splitterInput||'';
+  document.getElementById('deviceNotes').value=d.notes||'';
+  showModal('deviceModal');
+}
+function saveDevice() {
+  const p=getProject(); if(!p)return;
+  const id=document.getElementById('deviceId').value;
+  const type=document.getElementById('deviceType').value;
+  const name=document.getElementById('deviceName').value.trim();
+  if(!name) return toast('Nama perangkat wajib diisi');
+  const location=document.getElementById('deviceLocation').value.trim();
+  const notes=document.getElementById('deviceNotes').value.trim();
+  const isSplitterDev=(type==='ODC');
+  const splitterRatio=isSplitterDev?document.getElementById('deviceSplitterRatio').value:'';
+  const splitterQty=isSplitterDev?parseInt(document.getElementById('deviceSplitterQty').value)||1:0;
+  const splitterInput=isSplitterDev?document.getElementById('deviceSplitterInput').value.trim():'';
+  if(id) {
+    const d=p.devices.find(x=>x.id===id);
+    if(d){d.type=type;d.name=name;d.location=location;d.notes=notes;d.splitterRatio=splitterRatio;d.splitterQty=splitterQty;d.splitterInput=splitterInput;}
+  } else {
+    p.devices.push({id:uid(),type,name,location,notes,splitterRatio,splitterQty,splitterInput});
+  }
+  save(); hideModal('deviceModal'); renderAll(); toast('Perangkat disimpan');
+}
+function getSplitterOutputCount(dev) {
+  if(!dev||!dev.splitterRatio||dev.type!=='ODC')return 0;
+  const out=parseInt(dev.splitterRatio.split(':')[1])||0;
+  return out*(dev.splitterQty||1);
+}
+function deleteDevice(did) {
+  const p=getProject(); if(!p)return;
+  const d=p.devices.find(x=>x.id===did); if(!d)return;
+  const cc=p.connections.filter(c=>c.from===did||c.to===did).length;
+  showDeleteConfirm(`Hapus "${d.name}"?${cc?' ('+cc+' koneksi terkait ikut dihapus)':''}`,()=>{
+    p.connections=p.connections.filter(c=>c.from!==did&&c.to!==did);
+    p.devices=p.devices.filter(x=>x.id!==did);
+    save(); renderAll(); toast('Perangkat dihapus');
+  });
+}
+
+// ===== CONNECTION =====
+function onCoreCountChange() {
+  const count = parseInt(document.getElementById('connCoreCount').value);
+  document.getElementById('tubeConfigGroup').style.display = (count === 24) ? '' : 'none';
+  renderCoreMapInputs();
+}
+
+function showAddConnection() {
+  const p=getProject(); if(!p) return toast('Pilih proyek dulu');
+  if(p.devices.length<2) return toast('Minimal 2 perangkat diperlukan');
+  document.getElementById('connectionModalTitle').textContent='Tambah Koneksi Kabel';
+  document.getElementById('connId').value='';
+  populateDeviceSelects();
+  document.getElementById('connCoreCount').value='12';
+  document.getElementById('connTubeConfig').value='4x6';
+  document.getElementById('tubeConfigGroup').style.display='none';
+  document.getElementById('connLength').value='';
+  document.getElementById('connLabel').value='';
+  document.getElementById('splitterHint').style.display='none';
+  document.getElementById('connSplitterPort').value='';
+  document.getElementById('splitterPortGroup').style.display='none';
+  currentCoreData=null;
+  renderCoreMapInputs();
+  onConnDeviceChange();
+  showModal('connectionModal');
+}
+function showEditConnection(cid) {
+  const p=getProject(); if(!p)return;
+  const c=p.connections.find(x=>x.id===cid); if(!c)return;
+  document.getElementById('connectionModalTitle').textContent='Edit Koneksi Kabel';
+  document.getElementById('connId').value=c.id;
+  populateDeviceSelects();
+  document.getElementById('connFrom').value=c.from;
+  document.getElementById('connTo').value=c.to;
+  document.getElementById('connCoreCount').value=c.coreCount;
+  document.getElementById('connTubeConfig').value=c.tubeConfig||'4x6';
+  document.getElementById('tubeConfigGroup').style.display=(c.coreCount===24)?'':'none';
+  document.getElementById('connLength').value=c.length||'';
+  document.getElementById('connLabel').value=c.label||'';
+  document.getElementById('connSplitterPort').value=c.splitterPort||'';
+  currentCoreData=JSON.parse(JSON.stringify(c.cores));
+  renderCoreMapInputs();
+  onConnDeviceChange();
+  if(c.splitterPort) document.getElementById('connSplitterPort').value=c.splitterPort;
+  showModal('connectionModal');
+}
+function populateDeviceSelects() {
+  const p=getProject(); if(!p)return;
+  const sorted=[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]);
+  const opts=sorted.map(d=>`<option value="${d.id}">[${d.type}] ${esc(d.name)}</option>`).join('');
+  document.getElementById('connFrom').innerHTML=opts;
+  document.getElementById('connTo').innerHTML=opts;
+  if(sorted.length>=2) document.getElementById('connTo').value=sorted[1].id;
+}
+
+function getCurrentTubeConfig() {
+  const count=parseInt(document.getElementById('connCoreCount').value);
+  const tc=document.getElementById('connTubeConfig').value;
+  return (count===24)?tc:null;
+}
+
+function getSelectedDeviceSplitter(selectId) {
+  const p=getProject(); if(!p)return null;
+  const did=document.getElementById(selectId).value;
+  const d=p.devices.find(x=>x.id===did);
+  if(!d||!d.splitterRatio||d.type!=='ODC')return null;
+  return d;
+}
+
+function onConnDeviceChange() {
+  const p=getProject(); if(!p)return;
+  const fromDev=getSelectedDeviceSplitter('connFrom');
+  const toDev=getSelectedDeviceSplitter('connTo');
+  const fromId=document.getElementById('connFrom').value;
+  const toId=document.getElementById('connTo').value;
+  const fromFull=p.devices.find(x=>x.id===fromId);
+  const toFull=p.devices.find(x=>x.id===toId);
+
+  // Hint splitter
+  const hint=document.getElementById('splitterHint');
+  let msg='';
+  if(fromDev) msg+=`<strong>${esc(fromDev.name)}</strong> memiliki Splitter ${fromDev.splitterRatio}${fromDev.splitterQty>1?' x'+fromDev.splitterQty:''}${fromDev.splitterInput?' (Input: '+esc(fromDev.splitterInput)+')':''}. `;
+  if(toDev) msg+=`<strong>${esc(toDev.name)}</strong> memiliki Splitter ${toDev.splitterRatio}${toDev.splitterQty>1?' x'+toDev.splitterQty:''}. `;
+  if(msg) {
+    hint.style.display='flex';
+    hint.innerHTML=`<span>&#9889;</span> ${msg}`;
+  } else {
+    hint.style.display='none';
+  }
+
+  // Splitter port dropdown — muncul jika DARI perangkat yang punya splitter
+  const portGroup=document.getElementById('splitterPortGroup');
+  const portSelect=document.getElementById('connSplitterPort');
+  const portLabel=document.getElementById('splitterPortLabel');
+  if(fromDev) {
+    const totalOut=getSplitterOutputCount(fromDev);
+    portGroup.style.display='';
+    portLabel.textContent=`Port Output Splitter ${fromDev.splitterRatio} (${esc(fromDev.name)})`;
+    const curVal=portSelect.value;
+    // cari port yang sudah dipakai oleh koneksi lain
+    const usedPorts=new Set();
+    const editingId=document.getElementById('connId').value;
+    p.connections.forEach(c=>{
+      if(c.from===fromId && c.splitterPort && c.id!==editingId) usedPorts.add(c.splitterPort);
+    });
+    let opts='<option value="">-- Pilih port --</option>';
+    for(let i=1;i<=totalOut;i++) {
+      const used=usedPorts.has(i);
+      opts+=`<option value="${i}" ${used?'style="color:var(--danger)"':''}>${'Port '+i}${used?' (sudah terpakai)':''}</option>`;
+    }
+    portSelect.innerHTML=opts;
+    if(curVal) portSelect.value=curVal;
+  } else {
+    portGroup.style.display='none';
+    portSelect.innerHTML='<option value="">--</option>';
+  }
+
+  // Auto-fill untuk koneksi baru
+  if(!document.getElementById('connId').value && currentCoreData) {
+    const allKosong=currentCoreData.every(c=>c.status==='kosong'&&!c.label);
+    if(allKosong && (fromDev||toDev)) autoFillBySplitter();
+  }
+}
+
+function autoFillBySplitter() {
+  if(!currentCoreData||!currentCoreData.length)return;
+  const p=getProject(); if(!p)return;
+  const fromDev=getSelectedDeviceSplitter('connFrom');
+  const toDev=getSelectedDeviceSplitter('connTo');
+  const splitterDev=fromDev||toDev;
+  if(!splitterDev) return toast('Tidak ada perangkat dengan splitter pada koneksi ini');
+
+  const ratio=splitterDev.splitterRatio;
+  const parts=ratio.split(':');
+  const input=parseInt(parts[0])||1;
+  const output=parseInt(parts[1])||1;
+  const qty=splitterDev.splitterQty||1;
+
+  // Jumlah core yang terpakai = input × jumlah splitter
+  // Contoh: splitter 1:4 x 1 = 1 core terpakai (input ke splitter)
+  // splitter 1:8 x 2 = 2 core terpakai
+  const usedCount=Math.min(input*qty, currentCoreData.length);
+
+  currentCoreData.forEach((c,i)=>{
+    if(i<usedCount) {
+      c.status='terpakai';
+      c.label=c.label||`Splitter ${ratio} #${Math.floor(i/input)+1}`;
+    } else {
+      c.status='kosong';
+      if(!c.label) c.label='';
+    }
+  });
+
+  renderCoreMapInputs();
+  toast(`${usedCount} core diisi otomatis (Splitter ${ratio}${qty>1?' x'+qty:''})`);
+}
+
+function resetAllCores() {
+  if(!currentCoreData)return;
+  currentCoreData.forEach(c=>{c.status='kosong';c.label='';});
+  renderCoreMapInputs();
+  toast('Semua core direset ke kosong');
+}
+
+function renderCoreMapInputs() {
+  const count=parseInt(document.getElementById('connCoreCount').value);
+  const tubeConfig=getCurrentTubeConfig();
+  const layout=getTubeLayout(count, tubeConfig);
+
+  if(!currentCoreData||currentCoreData.length!==count) {
+    const old=currentCoreData||[];
+    currentCoreData=[];
+    for(let i=0;i<count;i++) {
+      currentCoreData.push(old[i]||{number:i+1,status:'kosong',label:''});
+      currentCoreData[i].number=i+1;
+    }
+  }
+
+  const container=document.getElementById('coreMapContainer');
+  let html='';
+
+  if(layout.tubeCount>1) {
+    for(let t=0;t<layout.tubeCount;t++) {
+      const tc=getTubeColor(t);
+      const start=t*layout.coresPerTube;
+      const end=Math.min(start+layout.coresPerTube,count);
+      html+=`<div class="core-map-section">
+        <div class="core-map-section-title" style="background:${tc.hex}">
+          <span style="display:inline-block;width:14px;height:14px;background:${tc.hex};border:2px solid rgba(255,255,255,0.5);border-radius:3px"></span>
+          Tube ${t+1} - ${tc.name} (Core ${start+1}-${end})
+        </div>
+        <div class="core-map-grid">`;
+      for(let i=start;i<end;i++) html+=renderCoreMapItem(i, layout);
+      html+=`</div></div>`;
+    }
+  } else {
+    html+=`<div class="core-map-grid">`;
+    for(let i=0;i<count;i++) html+=renderCoreMapItem(i, layout);
+    html+=`</div>`;
+  }
+  container.innerHTML=html;
+}
+
+function renderCoreMapItem(i, layout) {
+  const core=currentCoreData[i];
+  const cc=getCoreColor(core.number, layout);
+  const textColor=cc.textColor||'white';
+  const borderBase=cc.border||'rgba(0,0,0,0.2)';
+  return `
+  <div class="core-map-item">
+    <button type="button" class="core-map-btn status-${core.status}"
+      style="background:${cc.hex};color:${textColor};border-color:${core.status==='kosong'?borderBase:''}"
+      onclick="toggleCore(${i})" title="Core ${core.number} (${cc.name}) - ${STATUS_LABELS[core.status]}">
+      ${core.number}
+      <span class="core-btn-color-name">${cc.name}</span>
+    </button>
+    <span class="core-map-status-text s-${core.status}">${STATUS_LABELS[core.status]}</span>
+    <input class="core-map-label" type="text" value="${esc(core.label)}" placeholder="ket." onchange="updateCoreLabel(${i},this.value)">
+  </div>`;
+}
+
+function toggleCore(i) {
+  const cur=STATUS_CYCLE.indexOf(currentCoreData[i].status);
+  currentCoreData[i].status=STATUS_CYCLE[(cur+1)%STATUS_CYCLE.length];
+  renderCoreMapInputs();
+}
+function updateCoreLabel(i,v) { currentCoreData[i].label=v.trim(); }
+
+function saveConnection() {
+  const p=getProject(); if(!p)return;
+  const id=document.getElementById('connId').value;
+  const from=document.getElementById('connFrom').value;
+  const to=document.getElementById('connTo').value;
+  if(from===to) return toast('Perangkat asal dan tujuan tidak boleh sama');
+  const fromDev=p.devices.find(x=>x.id===from);
+  const toDev=p.devices.find(x=>x.id===to);
+  if(fromDev&&toDev&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→ODP→TIANG)`);
+  const coreCount=parseInt(document.getElementById('connCoreCount').value);
+  const tubeConfig=getCurrentTubeConfig();
+  const splitterPort=(fromDev&&fromDev.type==='ODC'&&fromDev.splitterRatio)?parseInt(document.getElementById('connSplitterPort').value)||0:0;
+  const length=document.getElementById('connLength').value?parseFloat(document.getElementById('connLength').value):null;
+  const label=document.getElementById('connLabel').value.trim();
+  document.querySelectorAll('#coreMapContainer .core-map-label').forEach((inp,i)=>{
+    if(currentCoreData[i]) currentCoreData[i].label=inp.value.trim();
+  });
+  if(id) {
+    const c=p.connections.find(x=>x.id===id);
+    if(c){c.from=from;c.to=to;c.coreCount=coreCount;c.tubeConfig=tubeConfig;c.splitterPort=splitterPort;c.length=length;c.label=label;c.cores=currentCoreData;}
+  } else {
+    p.connections.push({id:uid(),from,to,coreCount,tubeConfig,splitterPort,length,label,cores:currentCoreData});
+  }
+  save(); hideModal('connectionModal'); renderAll(); toast('Koneksi disimpan');
+}
+function deleteConnection(cid) {
+  showDeleteConfirm('Hapus koneksi ini?',()=>{
+    const p=getProject(); if(!p)return;
+    p.connections=p.connections.filter(x=>x.id!==cid);
+    save(); renderAll(); toast('Koneksi dihapus');
+  });
+}
+
+// ===== RENDER ALL =====
+function renderAll() {
+  renderProjectSelect(); renderProjectInfo(); renderDeviceList();
+  renderConnectionList(); renderDiagram(); renderTable(); renderLegend(); renderSummary();
+}
+
+function renderProjectInfo() {
+  const el=document.getElementById('projectInfo');
+  const c=document.getElementById('projectInfoContent');
+  const p=getProject();
+  if(!p) { el.style.display='none'; return; }
+  el.style.display='block';
+  c.innerHTML=`
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">${esc(p.name)}</div>
+    ${p.description?`<div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">${esc(p.description)}</div>`:''}
+    ${p.pic?`<div style="font-size:12px;color:var(--gray-500)">PIC: ${esc(p.pic)}</div>`:''}
+    <div style="margin-top:8px;display:flex;gap:6px">
+      <button class="btn btn-xs btn-outline" onclick="showEditProject()">&#9998; Edit</button>
+      <button class="btn btn-xs btn-danger" onclick="deleteProject()">Hapus</button>
+    </div>`;
+}
+
+function getSearchQuery() {
+  return (document.getElementById('sidebarSearch').value||'').toLowerCase().trim();
+}
+function onSidebarSearch() { renderDeviceList(); renderConnectionList(); }
+
+function renderDeviceList() {
+  const el=document.getElementById('deviceList');
+  const countEl=document.getElementById('deviceCount');
+  const p=getProject();
+  if(!p) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Pilih proyek dulu</p>'; countEl.textContent=''; return; }
+  if(!p.devices.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Belum ada perangkat</p>'; countEl.textContent=''; return; }
+  const q=getSearchQuery();
+  const sorted=[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]);
+  const filtered=q?sorted.filter(d=>(d.type+' '+d.name+' '+(d.location||'')+' '+(d.notes||'')).toLowerCase().includes(q)):sorted;
+  countEl.textContent=q?`(${filtered.length}/${sorted.length})`:`(${sorted.length})`;
+  if(q&&!filtered.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Tidak ditemukan</p>'; return; }
+  el.innerHTML=filtered.map(d=>{
+    const splitterInfo=(d.type==='ODC'&&d.splitterRatio)?` | Splitter ${d.splitterRatio}${d.splitterQty>1?' x'+d.splitterQty:''}` :'';
+    return `
+    <div class="device-item" ondblclick="showEditDevice('${d.id}')">
+      <span class="device-type-badge badge-${d.type.toLowerCase()}">${d.type}</span>
+      <div class="device-item-info">
+        <div class="device-item-name">${esc(d.name)}</div>
+        <div class="device-item-loc">${esc(d.location)||''}${splitterInfo}</div>
+      </div>
+      <div class="device-item-actions">
+        <button class="btn-icon" onclick="showEditDevice('${d.id}')" title="Edit">&#9998;</button>
+        <button class="btn-icon" onclick="deleteDevice('${d.id}')" title="Hapus">&#128465;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getTubeConfigLabel(c) {
+  if(c.coreCount===24 && c.tubeConfig==='4x6') return '4T×6C';
+  if(c.coreCount===24 && c.tubeConfig==='2x12') return '2T×12C';
+  return '';
+}
+
+function renderConnectionList() {
+  const el=document.getElementById('connectionList');
+  const countEl=document.getElementById('connCount');
+  const p=getProject();
+  if(!p) { el.innerHTML=''; countEl.textContent=''; return; }
+  if(!p.connections.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Belum ada koneksi</p>'; countEl.textContent=''; return; }
+  const q=getSearchQuery();
+  const all=p.connections.map(c=>{
+    const f=p.devices.find(d=>d.id===c.from);
+    const t=p.devices.find(d=>d.id===c.to);
+    return {c,f,t};
+  }).filter(x=>x.f&&x.t);
+  const filtered=q?all.filter(({c,f,t})=>(f.name+' '+t.name+' '+(f.location||'')+' '+(t.location||'')+' '+(c.label||'')).toLowerCase().includes(q)):all;
+  countEl.textContent=q?`(${filtered.length}/${all.length})`:`(${all.length})`;
+  if(q&&!filtered.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Tidak ditemukan</p>'; return; }
+  el.innerHTML=filtered.map(({c,f,t})=>{
+    const used=c.cores.filter(x=>x.status==='terpakai').length;
+    const tcl=getTubeConfigLabel(c);
+    return `
+    <div class="device-item" ondblclick="showEditConnection('${c.id}')">
+      <div class="device-item-info">
+        <div class="device-item-name" style="font-size:12px">${esc(f.name)} &rarr; ${esc(t.name)}</div>
+        <div class="device-item-loc">${c.coreCount}C${tcl?' ('+tcl+')':''}${c.splitterPort?' | Port '+c.splitterPort:''} | ${used}/${c.coreCount} terpakai${c.label?' | '+esc(c.label):''}</div>
+      </div>
+      <div class="device-item-actions">
+        <button class="btn-icon" onclick="showEditConnection('${c.id}')" title="Edit">&#9998;</button>
+        <button class="btn-icon" onclick="deleteConnection('${c.id}')" title="Hapus">&#128465;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSummary() {
+  const el=document.getElementById('summaryPanel');
+  const p=getProject();
+  if(!p) { el.innerHTML=''; return; }
+  let total=0,used=0,free=0,res=0;
+  p.connections.forEach(c=>c.cores.forEach(core=>{total++;if(core.status==='terpakai')used++;else if(core.status==='cadangan')res++;else free++;}));
+  const tc={};
+  DEVICE_TYPES.forEach(t=>tc[t]=p.devices.filter(d=>d.type===t).length);
+  el.innerHTML=`<div style="font-size:12px;color:var(--gray-600);line-height:1.8">
+    ${DEVICE_TYPES.map(t=>tc[t]?`<div><strong>${t}:</strong> ${tc[t]}</div>`:'').join('')}
+    ${total?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-200)">
+      <div><strong>Total Core:</strong> ${total}</div>
+      <div style="color:var(--danger)"><strong>Terpakai:</strong> ${used} (${Math.round(used/total*100)}%)</div>
+      <div style="color:var(--success)"><strong>Kosong:</strong> ${free}</div>
+      <div style="color:#b45309"><strong>Cadangan:</strong> ${res}</div>
+    </div>`:''}</div>`;
+}
+
+// ===== DIAGRAM =====
+function buildTree(project) {
+  const dm={}; project.devices.forEach(d=>dm[d.id]={...d,children:[]});
+  const childIds=new Set();
+  project.connections.forEach(c=>{
+    if(dm[c.from]&&dm[c.to]) { dm[c.from].children.push({device:dm[c.to],connection:c}); childIds.add(c.to); }
+  });
+  return project.devices.filter(d=>!childIds.has(d.id)).map(d=>dm[d.id]).sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]);
+}
+
+function renderTreeHTML(node,conn) {
+  let coreMini='';
+  if(conn) {
+    const layout=getTubeLayout(conn.coreCount, conn.tubeConfig);
+    coreMini=conn.cores.map(c=>{
+      const cc=getCoreColor(c.number, layout);
+      return `<span class="core-mini-dot" style="background:${cc.hex};${cc.border?'border:1px solid '+cc.border:''}" title="Core ${c.number} (${cc.name}): ${STATUS_LABELS[c.status]}${c.label?' - '+c.label:''}"></span>`;
+    }).join('');
+  }
+  const tcl=conn?getTubeConfigLabel(conn):'';
+  const portTag=conn&&conn.splitterPort?`<span style="font-size:10px;background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:4px;font-weight:600">Port ${conn.splitterPort}</span>`:'';
+  const connInfo=conn?`<div class="conn-label">${portTag} ${conn.coreCount}C${tcl?' ('+tcl+')':''}${conn.length?' &middot; '+conn.length+'m':''}${conn.label?' &middot; '+esc(conn.label):''}<span class="core-mini">${coreMini}</span></div>`:'';
+  const childrenHtml=node.children.length?
+    `<div class="tree-children">${node.children.map(ch=>
+      `<div class="tree-child">${renderTreeHTML(ch.device,ch.connection)}</div>`
+    ).join('')}</div>`:'';
+  const splitterTag=(node.type==='ODC'&&node.splitterRatio)?`<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${node.splitterRatio}${node.splitterQty>1?' x'+node.splitterQty:''}</span>`:'';
+  const inputTag=(node.type==='ODC'&&node.splitterInput)?`<div class="node-loc" style="color:#92400e;font-style:italic">Input: ${esc(node.splitterInput)}</div>`:'';
+  return `${connInfo}
+    <div class="node-box" ondblclick="showEditDevice('${node.id}')">
+      <span class="device-type-badge badge-${node.type.toLowerCase()}">${node.type}</span>
+      <div><div class="node-name">${esc(node.name)} ${splitterTag}</div>${node.location?`<div class="node-loc">${esc(node.location)}</div>`:''}${inputTag}</div>
+    </div>${childrenHtml}`;
+}
+
+function renderDiagram() {
+  const el=document.getElementById('diagramView');
+  const p=getProject();
+  if(!p||!p.devices.length) { el.innerHTML=`<div class="empty-state"><div class="icon">&#128225;</div><h3>Belum Ada Data</h3><p>Tambahkan perangkat lalu buat koneksi untuk melihat diagram.</p></div>`; return; }
+  const roots=buildTree(p);
+  el.innerHTML=`<div class="diagram-container">${roots.map(r=>`<div style="margin-bottom:16px">${renderTreeHTML(r,null)}</div>`).join('')}</div>`;
+}
+
+// ===== TABLE =====
+function renderCoreVisualStrip(conn) {
+  const layout=getTubeLayout(conn.coreCount, conn.tubeConfig);
+  let html='';
+  conn.cores.forEach((c,i)=>{
+    if(layout.tubeCount>1 && i>0 && i%layout.coresPerTube===0) {
+      html+=`<div class="tube-sep"></div>`;
+    }
+    const cc=getCoreColor(c.number, layout);
+    const textColor=cc.textColor||'white';
+    html+=`<div class="core-visual-item">
+      <div class="core-visual-box status-${c.status}" style="background:${cc.hex};color:${textColor};${cc.border?'border-color:'+cc.border:''}" title="Core ${c.number} (${cc.name}): ${STATUS_LABELS[c.status]}">${c.number}</div>
+      <span class="core-visual-status s-${c.status}">${STATUS_LABELS[c.status]}</span>
+      ${c.label?`<span class="core-visual-label" title="${esc(c.label)}">${esc(c.label)}</span>`:''}
+    </div>`;
+  });
+  return html;
+}
+
+function renderTable() {
+  const el=document.getElementById('tableView');
+  const p=getProject();
+  if(!p||!p.connections.length) { el.innerHTML=`<div class="empty-state"><div class="icon">&#128203;</div><h3>Belum Ada Koneksi</h3><p>Tambahkan koneksi kabel untuk melihat detail core.</p></div>`; return; }
+
+  let total=0,used=0,free=0,res=0;
+  p.connections.forEach(c=>c.cores.forEach(core=>{total++;if(core.status==='terpakai')used++;else if(core.status==='cadangan')res++;else free++;}));
+
+  let html=`<div class="stats-row">
+    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total Core</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${used}</div><div class="stat-label">Terpakai</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--success)">${free}</div><div class="stat-label">Kosong</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#b45309">${res}</div><div class="stat-label">Cadangan</div></div>
+  </div>`;
+
+  // === Daftar splitter ODC (untuk skip koneksi & render di bawah) ===
+  const splitterDevices=p.devices.filter(d=>d.type==='ODC'&&d.splitterRatio);
+  const splitterDeviceIds=new Set(splitterDevices.map(d=>d.id));
+
+  // === KONEKSI (skip koneksi dari ODC splitter yang pakai port, karena sudah ada di Pemetaan Splitter) ===
+  p.connections.forEach(c=>{
+    if(c.splitterPort && splitterDeviceIds.has(c.from)) return;
+    const f=p.devices.find(d=>d.id===c.from);
+    const t=p.devices.find(d=>d.id===c.to);
+    if(!f||!t)return;
+    const cu=c.cores.filter(x=>x.status==='terpakai').length;
+    const cf=c.cores.filter(x=>x.status==='kosong').length;
+    const cr=c.cores.filter(x=>x.status==='cadangan').length;
+    const layout=getTubeLayout(c.coreCount, c.tubeConfig);
+    const tcl=getTubeConfigLabel(c);
+
+    const fSplitter=(f.type==='ODC'&&f.splitterRatio)?` <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${f.splitterRatio}${f.splitterQty>1?' x'+f.splitterQty:''}</span>`:'';
+    const tSplitter=(t.type==='ODC'&&t.splitterRatio)?` <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${t.splitterRatio}${t.splitterQty>1?' x'+t.splitterQty:''}</span>`:'';
+    html+=`<div class="segment-card">
+      <div class="segment-header">
+        <div class="segment-title">
+          <span class="device-type-badge badge-${f.type.toLowerCase()}">${f.type}</span>${esc(f.name)}${fSplitter} &rarr;
+          <span class="device-type-badge badge-${t.type.toLowerCase()}">${t.type}</span>${esc(t.name)}${tSplitter}
+        </div>
+        <div class="segment-meta">${c.coreCount} Core${tcl?' ('+tcl+')':''}${c.length?' | '+c.length+' m':''}${c.label?' | '+esc(c.label):''} | <span style="color:var(--danger)">${cu} terpakai</span>, <span style="color:var(--success)">${cf} kosong</span>${cr?', <span style="color:#b45309">'+cr+' cadangan</span>':''}</div>
+      </div>
+      <div class="core-visual-strip">${renderCoreVisualStrip(c)}</div>
+      <table class="core-table">
+        <thead><tr><th style="width:50px">Core</th><th style="width:90px">Warna</th>${layout.tubeCount>1?'<th style="width:90px">Tube</th>':''}<th style="width:100px">Status</th><th>Keterangan</th></tr></thead>
+        <tbody>`;
+
+    c.cores.forEach((core,i)=>{
+      const cc=getCoreColor(core.number, layout);
+      if(layout.tubeCount>1 && i%layout.coresPerTube===0) {
+        const tubeIdx=Math.floor(i/layout.coresPerTube);
+        const tc=getTubeColor(tubeIdx);
+        html+=`<tr><td colspan="${layout.tubeCount>1?5:4}" class="tube-header" style="background:${tc.hex}">
+          <span class="tube-color-dot" style="background:${tc.hex}"></span>
+          Tube ${tubeIdx+1} - ${tc.name} (Core ${i+1}-${Math.min(i+layout.coresPerTube,c.coreCount)})
+        </td></tr>`;
+      }
+      const tubeIdx=getTubeForCore(core.number, layout);
+      const tc=layout.tubeCount>1?getTubeColor(tubeIdx):null;
+      html+=`<tr>
+        <td style="font-weight:700;text-align:center">${core.number}</td>
+        <td><div class="core-num-cell"><span class="core-color-dot" style="background:${cc.hex};${cc.border?'border-color:'+cc.border:''}"></span><span class="core-color-name">${cc.name}</span></div></td>
+        ${layout.tubeCount>1?`<td><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:${tc.hex};border:1px solid rgba(0,0,0,0.1)"></span><span style="font-size:11px">${tc.name}</span></span></td>`:''}
+        <td><span class="status-badge status-${core.status}">${STATUS_LABELS[core.status]}</span></td>
+        <td>${esc(core.label)||'<span style="color:var(--gray-300)">-</span>'}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  });
+
+  // === PEMETAAN SPLITTER (di bawah koneksi) ===
+  if(splitterDevices.length) {
+    html+=`<h3 style="font-size:14px;margin:20px 0 12px;color:var(--gray-700)">Pemetaan Splitter</h3>`;
+    splitterDevices.forEach(dev=>{
+      const totalOut=getSplitterOutputCount(dev);
+      const outConns=p.connections.filter(c=>c.from===dev.id && c.splitterPort);
+      html+=`<div class="segment-card" style="margin-bottom:16px">
+        <div class="segment-header" style="background:#fef3c7">
+          <div class="segment-title">
+            <span class="device-type-badge badge-${dev.type.toLowerCase()}">${dev.type}</span>
+            ${esc(dev.name)} &mdash; Splitter ${dev.splitterRatio}${dev.splitterQty>1?' x'+dev.splitterQty:''}
+          </div>
+          <div class="segment-meta">${outConns.length}/${totalOut} port terpakai</div>
+        </div>
+        <div style="padding:12px 16px">
+          <div style="margin-bottom:10px">
+            <strong style="font-size:12px;color:var(--gray-600)">INPUT SPLITTER:</strong>
+            <div style="margin-top:4px;font-size:13px">${dev.splitterInput?esc(dev.splitterInput):'<span style="color:var(--gray-400)">Belum diisi (edit perangkat untuk mengisi sumber input)</span>'}</div>
+          </div>
+          <div>
+            <strong style="font-size:12px;color:var(--gray-600)">OUTPUT SPLITTER:</strong>
+            <table class="core-table" style="margin-top:6px">
+              <thead><tr><th style="width:70px">Port</th><th>Tujuan</th><th style="width:80px">Kabel</th><th style="width:90px">Status</th></tr></thead>
+              <tbody>`;
+      for(let port=1;port<=totalOut;port++) {
+        const conn=outConns.find(c=>c.splitterPort===port);
+        if(conn) {
+          const toDev=p.devices.find(d=>d.id===conn.to);
+          html+=`<tr>
+            <td style="font-weight:700;text-align:center">Port ${port}</td>
+            <td><span class="device-type-badge badge-${toDev?toDev.type.toLowerCase():'tiang'}" style="font-size:9px">${toDev?toDev.type:'?'}</span> ${toDev?esc(toDev.name):'?'}${toDev&&toDev.location?' <span style="color:var(--gray-400);font-size:11px">('+esc(toDev.location)+')</span>':''}</td>
+            <td>${conn.coreCount}C${conn.length?' / '+conn.length+'m':''}</td>
+            <td><span class="status-badge status-terpakai">Terpakai</span></td>
+          </tr>`;
+        } else {
+          html+=`<tr>
+            <td style="font-weight:700;text-align:center">Port ${port}</td>
+            <td style="color:var(--gray-400)">- belum terhubung -</td>
+            <td>-</td>
+            <td><span class="status-badge status-kosong">Kosong</span></td>
+          </tr>`;
+        }
+      }
+      html+=`</tbody></table></div></div></div>`;
+    });
+  }
+
+  el.innerHTML=html;
+}
+
+// ===== LEGEND =====
+function renderLegend() {
+  const el=document.getElementById('legendView');
+  el.innerHTML=`
+    <h3 style="margin-bottom:16px;font-size:16px">Standar Warna Core Fiber Optic</h3>
+
+    <div class="segment-card">
+      <div class="segment-header"><div class="segment-title">Warna Tube</div></div>
+      <div style="padding:16px;display:flex;flex-wrap:wrap;gap:12px">
+        ${TUBE_COLORS.map((tc,i)=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gray-50);border-radius:8px;border:1px solid var(--gray-200);min-width:160px">
+            <div style="width:36px;height:36px;border-radius:8px;background:${tc.hex};border:2px solid rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px">T${i+1}</div>
+            <div><div style="font-weight:600;font-size:14px">${tc.name}</div><div style="font-size:11px;color:var(--gray-500)">Tube ${i+1}</div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="segment-card" style="margin-top:16px">
+      <div class="segment-header"><div class="segment-title">6 Warna Standar per Tube (ADSS)</div></div>
+      <div style="padding:16px;display:flex;flex-wrap:wrap;gap:12px">
+        ${CORE_COLORS_6.map(cc=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gray-50);border-radius:8px;border:1px solid var(--gray-200);min-width:180px">
+            <div style="width:36px;height:36px;border-radius:8px;background:${cc.hex};${cc.border?'border:2px solid '+cc.border:'border:2px solid rgba(0,0,0,0.1)'};display:flex;align-items:center;justify-content:center;color:${cc.textColor||'white'};font-weight:800;font-size:14px">${cc.id}</div>
+            <div><div style="font-weight:600;font-size:14px">${cc.name}</div><div style="font-size:11px;color:var(--gray-500)">Core ${cc.id}</div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="segment-card" style="margin-top:16px">
+      <div class="segment-header"><div class="segment-title">12 Warna Lengkap per Tube</div></div>
+      <div style="padding:16px;display:flex;flex-wrap:wrap;gap:12px">
+        ${CORE_COLORS_12.map(cc=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gray-50);border-radius:8px;border:1px solid var(--gray-200);min-width:180px">
+            <div style="width:36px;height:36px;border-radius:8px;background:${cc.hex};${cc.border?'border:2px solid '+cc.border:'border:2px solid rgba(0,0,0,0.1)'};display:flex;align-items:center;justify-content:center;color:${cc.textColor||'white'};font-weight:800;font-size:14px">${cc.id}</div>
+            <div><div style="font-weight:600;font-size:14px">${cc.name}</div><div style="font-size:11px;color:var(--gray-500)">Core ${cc.id}</div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="segment-card" style="margin-top:16px">
+      <div class="segment-header"><div class="segment-title">Konfigurasi Kabel</div></div>
+      <div style="padding:16px;font-size:13px;line-height:2.2;color:var(--gray-700)">
+        <div><strong>1 Core:</strong> Core 1 (Biru)</div>
+        <div><strong>2 Core:</strong> Core 1-2 (Biru, Jingga)</div>
+        <div><strong>4 Core:</strong> Core 1-4 (Biru, Jingga, Hijau, Coklat)</div>
+        <div><strong>6 Core:</strong> Core 1-6 (Biru, Jingga, Hijau, Coklat, Abu-abu, Putih) &mdash; 1 Tube</div>
+        <div><strong>8 Core:</strong> Core 1-8 (Biru s/d Hitam)</div>
+        <div><strong>12 Core:</strong> Core 1-12 (Biru s/d Tosca) &mdash; 1 Tube 12 warna</div>
+        <div><strong>24 Core (4 Tube × 6 Core - ADSS):</strong></div>
+        <div style="padding-left:20px;font-size:12px;line-height:1.8">
+          Tube Biru: Core 1-6 (Biru, Jingga, Hijau, Coklat, Abu-abu, Putih)<br>
+          Tube Jingga: Core 7-12 (Biru, Jingga, Hijau, Coklat, Abu-abu, Putih)<br>
+          Tube Hijau: Core 13-18 (Biru, Jingga, Hijau, Coklat, Abu-abu, Putih)<br>
+          Tube Coklat: Core 19-24 (Biru, Jingga, Hijau, Coklat, Abu-abu, Putih)
+        </div>
+        <div><strong>24 Core (2 Tube × 12 Core):</strong></div>
+        <div style="padding-left:20px;font-size:12px;line-height:1.8">
+          Tube Biru: Core 1-12 (12 warna standar)<br>
+          Tube Jingga: Core 13-24 (12 warna standar berulang)
+        </div>
+      </div>
+    </div>
+
+    <div class="segment-card" style="margin-top:16px">
+      <div class="segment-header"><div class="segment-title">Status Core</div></div>
+      <div style="padding:16px;display:flex;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px"><span class="status-badge status-kosong" style="font-size:13px;padding:4px 14px">Kosong</span> Core belum digunakan</div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="status-badge status-terpakai" style="font-size:13px;padding:4px 14px">Terpakai</span> Core sedang digunakan</div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="status-badge status-cadangan" style="font-size:13px;padding:4px 14px">Cadangan</span> Core dicadangkan</div>
+      </div>
+    </div>`;
+}
+
+// ===== PRINT =====
+function printDocument() {
+  const p=getProject();
+  if(!p) return toast('Pilih proyek dulu');
+  if(!p.devices.length) return toast('Belum ada data');
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+
+  let ph=`<div class="print-page">
+    <div class="print-header">
+      <h1>DOKUMENTASI PEMETAAN CORE FIBER OPTIC</h1>
+      <h2>${esc(p.name)}</h2>
+      <div class="print-meta">${p.description?`<div style="margin-bottom:4px">${esc(p.description)}</div>`:''}<span>Tanggal: ${dateStr}</span>${p.pic?`<span>PIC: ${esc(p.pic)}</span>`:''}</div>
+    </div>
+    <div class="print-section-title">REFERENSI WARNA</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+      <div><strong style="font-size:10px">Warna Tube:</strong>
+        <div class="print-color-legend" style="margin-top:2px">${TUBE_COLORS.map((tc,i)=>`<div class="print-color-legend-item"><div class="print-color-legend-dot" style="background:${tc.hex}"></div>T${i+1} ${tc.name}</div>`).join('')}</div>
+      </div>
+      <div><strong style="font-size:10px">Warna Core (6 standar):</strong>
+        <div class="print-color-legend" style="margin-top:2px">${CORE_COLORS_6.map(cc=>`<div class="print-color-legend-item"><div class="print-color-legend-dot" style="background:${cc.hex};${cc.border?'border-color:'+cc.border:''}"></div>${cc.id}. ${cc.name}</div>`).join('')}</div>
+      </div>
+    </div>
+    <div class="print-section-title">TOPOLOGI JARINGAN</div>
+    <div class="print-tree">${document.getElementById('diagramView').innerHTML}</div>
+    <div class="print-section-title">DAFTAR PERANGKAT</div>
+    <table class="print-summary-table">
+      <thead><tr><th>No</th><th>Tipe</th><th>Nama</th><th>Lokasi</th><th>Splitter</th><th>Catatan</th></tr></thead>
+      <tbody>${[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]).map((d,i)=>`<tr><td>${i+1}</td><td>${d.type}</td><td>${esc(d.name)}</td><td>${esc(d.location)||'-'}</td><td>${(d.type==='ODC'&&d.splitterRatio)?d.splitterRatio+(d.splitterQty>1?' x'+d.splitterQty:''):'-'}</td><td>${esc(d.notes)||'-'}</td></tr>`).join('')}</tbody>
+    </table>
+    <div class="print-footer">Dokumentasi Pemetaan Core FO - ${esc(p.name)} - ${dateStr}</div>
+  </div>`;
+
+  // PRINT: Splitter mapping page
+  const splitterDevs=p.devices.filter(d=>d.type==='ODC'&&d.splitterRatio);
+  if(splitterDevs.length) {
+    ph+=`<div class="print-page"><div class="print-section-title">PEMETAAN SPLITTER</div>`;
+    splitterDevs.forEach(dev=>{
+      const totalOut=getSplitterOutputCount(dev);
+      const outConns=p.connections.filter(c=>c.from===dev.id && c.splitterPort);
+      ph+=`<div style="margin-bottom:12px">
+        <div style="font-weight:700;font-size:11px;margin-bottom:4px">
+          <span class="device-type-badge badge-${dev.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${dev.type}</span>
+          ${esc(dev.name)} &mdash; Splitter ${dev.splitterRatio}${dev.splitterQty>1?' x'+dev.splitterQty:''}
+        </div>
+        <div style="font-size:10px;margin-bottom:4px"><strong>Input:</strong> ${dev.splitterInput?esc(dev.splitterInput):'-'}</div>
+        <table class="print-core-table">
+          <thead><tr><th>Port Output</th><th>Tujuan</th><th>Kabel</th><th>Status</th></tr></thead>
+          <tbody>`;
+      for(let port=1;port<=totalOut;port++) {
+        const conn=outConns.find(c=>c.splitterPort===port);
+        if(conn) {
+          const toDev=p.devices.find(d=>d.id===conn.to);
+          ph+=`<tr><td style="text-align:center;font-weight:700">Port ${port}</td><td>${toDev?'['+toDev.type+'] '+esc(toDev.name):'-'}${toDev&&toDev.location?' ('+esc(toDev.location)+')':''}</td><td>${conn.coreCount}C${conn.length?' / '+conn.length+'m':''}</td><td><span class="status-badge status-terpakai" style="font-size:9px;padding:1px 6px">Terpakai</span></td></tr>`;
+        } else {
+          ph+=`<tr><td style="text-align:center;font-weight:700">Port ${port}</td><td style="color:#999">- kosong -</td><td>-</td><td><span class="status-badge status-kosong" style="font-size:9px;padding:1px 6px">Kosong</span></td></tr>`;
+        }
+      }
+      ph+=`</tbody></table></div>`;
+    });
+    ph+=`<div class="print-footer">Dokumentasi Pemetaan Core FO - ${esc(p.name)} - ${dateStr}</div></div>`;
+  }
+
+  if(p.connections.length) {
+    ph+=`<div class="print-page"><div class="print-section-title">DETAIL PENGGUNAAN CORE</div>`;
+    p.connections.forEach(c=>{
+      const f=p.devices.find(d=>d.id===c.from);
+      const t=p.devices.find(d=>d.id===c.to);
+      if(!f||!t)return;
+      const layout=getTubeLayout(c.coreCount, c.tubeConfig);
+      const cu=c.cores.filter(x=>x.status==='terpakai').length;
+      const cf=c.cores.filter(x=>x.status==='kosong').length;
+      const cr=c.cores.filter(x=>x.status==='cadangan').length;
+      const tcl=getTubeConfigLabel(c);
+
+      ph+=`<div class="print-segment-header">
+        <span class="device-type-badge badge-${f.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${f.type}</span>${esc(f.name)} &rarr;
+        <span class="device-type-badge badge-${t.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${t.type}</span>${esc(t.name)}
+        &mdash; ${c.coreCount} Core${tcl?' ('+tcl+')':''}${c.length?' | '+c.length+'m':''}${c.label?' | '+esc(c.label):''}
+        (Terpakai:${cu}, Kosong:${cf}${cr?', Cadangan:'+cr:''})
+      </div>`;
+
+      if(layout.tubeCount>1) {
+        for(let tb=0;tb<layout.tubeCount;tb++) {
+          const tc=getTubeColor(tb);
+          const start=tb*layout.coresPerTube;
+          const end=Math.min(start+layout.coresPerTube,c.coreCount);
+          const tubeCores=c.cores.slice(start,end);
+          ph+=`<div class="print-tube-title" style="background:${tc.hex}">Tube ${tb+1} - ${tc.name} (Core ${start+1}-${end})</div>
+          <div class="print-core-strip">${tubeCores.map(core=>{
+            const cc=getCoreColor(core.number,layout);
+            return `<div class="print-core-box" style="background:${cc.hex};color:${cc.textColor||'white'};${cc.border?'border-color:'+cc.border:''}">${core.number}</div>`;
+          }).join('')}</div>
+          <table class="print-core-table">
+            <thead><tr><th>Core</th><th>Warna</th><th>Status</th><th>Keterangan</th></tr></thead>
+            <tbody>${tubeCores.map(core=>{
+              const cc=getCoreColor(core.number,layout);
+              return `<tr>
+                <td style="text-align:center;font-weight:700">${core.number}</td>
+                <td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${cc.hex};${cc.border?'border:1px solid '+cc.border:'border:1px solid rgba(0,0,0,0.1)'};vertical-align:middle;margin-right:3px"></span>${cc.name}</td>
+                <td><span class="status-badge status-${core.status}" style="font-size:9px;padding:1px 6px">${STATUS_LABELS[core.status]}</span></td>
+                <td>${esc(core.label)||'-'}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>`;
+        }
+      } else {
+        ph+=`<div class="print-core-strip">${c.cores.map(core=>{
+          const cc=getCoreColor(core.number,layout);
+          return `<div class="print-core-box" style="background:${cc.hex};color:${cc.textColor||'white'};${cc.border?'border-color:'+cc.border:''}">${core.number}</div>`;
+        }).join('')}</div>
+        <table class="print-core-table">
+          <thead><tr><th>Core</th><th>Warna</th><th>Status</th><th>Keterangan</th></tr></thead>
+          <tbody>${c.cores.map(core=>{
+            const cc=getCoreColor(core.number,layout);
+            return `<tr>
+              <td style="text-align:center;font-weight:700">${core.number}</td>
+              <td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${cc.hex};${cc.border?'border:1px solid '+cc.border:'border:1px solid rgba(0,0,0,0.1)'};vertical-align:middle;margin-right:3px"></span>${cc.name}</td>
+              <td><span class="status-badge status-${core.status}" style="font-size:9px;padding:1px 6px">${STATUS_LABELS[core.status]}</span></td>
+              <td>${esc(core.label)||'-'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+      }
+    });
+
+    let total=0,used=0,free=0,res=0;
+    p.connections.forEach(c=>c.cores.forEach(core=>{total++;if(core.status==='terpakai')used++;else if(core.status==='cadangan')res++;else free++;}));
+    const tc2={};
+    DEVICE_TYPES.forEach(t=>tc2[t]=p.devices.filter(d=>d.type===t).length);
+
+    ph+=`<div class="print-section-title" style="margin-top:20px">RINGKASAN</div>
+    <table class="print-summary-table" style="width:auto">
+      <tr><td><strong>Total Perangkat</strong></td><td>${p.devices.length} (${DEVICE_TYPES.map(t=>tc2[t]?t+':'+tc2[t]:'').filter(Boolean).join(', ')})</td></tr>
+      <tr><td><strong>Total Koneksi</strong></td><td>${p.connections.length} segmen</td></tr>
+      <tr><td><strong>Total Core</strong></td><td>${total}</td></tr>
+      <tr><td><strong>Core Terpakai</strong></td><td>${used} (${total?Math.round(used/total*100):0}%)</td></tr>
+      <tr><td><strong>Core Kosong</strong></td><td>${free}</td></tr>
+      <tr><td><strong>Core Cadangan</strong></td><td>${res}</td></tr>
+    </table>
+    <div class="print-footer">Dokumentasi Pemetaan Core FO - ${esc(p.name)} - ${dateStr}</div></div>`;
+  }
+  document.getElementById('printView').innerHTML=ph;
+  setTimeout(()=>window.print(),200);
+}
+
+// ===== EXPORT / IMPORT =====
+function exportJSON() {
+  const p=getProject();
+  if(!p) return toast('Pilih proyek dulu');
+  const blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`FO_${p.name.replace(/[^a-zA-Z0-9]/g,'_')}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Data berhasil diekspor');
+}
+function importJSON(e) {
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev) {
+    try {
+      const data=JSON.parse(ev.target.result);
+      if(!data.id||!data.devices||!data.connections) throw new Error('Format tidak valid');
+      const idMap={};
+      data.id=uid();
+      data.name=(data.name||'Import')+' (impor)';
+      data.devices.forEach(d=>{ const nid=uid(); idMap[d.id]=nid; d.id=nid; });
+      data.connections.forEach(c=>{ c.id=uid(); c.from=idMap[c.from]||c.from; c.to=idMap[c.to]||c.to; });
+      appData.projects.push(data);
+      currentProjectId=data.id;
+      save(); renderAll(); toast('Data berhasil diimpor');
+    } catch(err) { toast('Gagal impor: '+err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ===== EVENTS =====
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
+});
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); });
+});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// INIT
+load();
+appData.projects.forEach(p=>p.devices.forEach(d=>{if(d.type!=='ODC'){d.splitterRatio='';d.splitterQty=0;d.splitterInput='';}}));
+save();
+if(appData.projects.length) currentProjectId=appData.projects[0].id;
+renderAll();
+</script>
+</body>
+</html>

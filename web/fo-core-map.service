@@ -1,0 +1,15 @@
+[Unit]
+Description=FO Core Map - Pemetaan Core Fiber Optic
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/fo-core-map
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target

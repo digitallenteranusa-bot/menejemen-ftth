@@ -1,0 +1,14 @@
+{
+  "name": "fo-core-map",
+  "version": "1.0.0",
+  "description": "Pemetaan Core Fiber Optic",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "better-sqlite3": "^11.6.0",
+    "express-session": "^1.18.1"
+  }
+}

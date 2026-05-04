@@ -701,7 +701,7 @@ function deleteProject() {
 // ===== DEVICE =====
 function onDeviceTypeChange() {
   const type=document.getElementById('deviceType').value;
-  document.getElementById('splitterGroup').style.display=(type==='ODC')?'':'none';
+  document.getElementById('splitterGroup').style.display=(type==='ODC'||type==='ODP')?'':'none';
 }
 function showAddDevice() {
   if(!getProject()) return toast('Pilih atau buat proyek dulu');
@@ -725,7 +725,7 @@ function showEditDevice(did) {
   document.getElementById('deviceType').value=d.type;
   document.getElementById('deviceName').value=d.name;
   document.getElementById('deviceLocation').value=d.location||'';
-  const hasSplitter=(d.type==='ODC');
+  const hasSplitter=(d.type==='ODC'||d.type==='ODP');
   document.getElementById('splitterGroup').style.display=hasSplitter?'':'none';
   document.getElementById('deviceSplitterRatio').value=d.splitterRatio||'';
   document.getElementById('deviceSplitterQty').value=d.splitterQty||1;
@@ -741,7 +741,7 @@ function saveDevice() {
   if(!name) return toast('Nama perangkat wajib diisi');
   const location=document.getElementById('deviceLocation').value.trim();
   const notes=document.getElementById('deviceNotes').value.trim();
-  const isSplitterDev=(type==='ODC');
+  const isSplitterDev=(type==='ODC'||type==='ODP');
   const splitterRatio=isSplitterDev?document.getElementById('deviceSplitterRatio').value:'';
   const splitterQty=isSplitterDev?parseInt(document.getElementById('deviceSplitterQty').value)||1:0;
   const splitterInput=isSplitterDev?document.getElementById('deviceSplitterInput').value.trim():'';
@@ -754,7 +754,7 @@ function saveDevice() {
   save(); hideModal('deviceModal'); renderAll(); toast('Perangkat disimpan');
 }
 function getSplitterOutputCount(dev) {
-  if(!dev||!dev.splitterRatio||dev.type!=='ODC')return 0;
+  if(!dev||!dev.splitterRatio||(dev.type!=='ODC'&&dev.type!=='ODP'))return 0;
   const out=parseInt(dev.splitterRatio.split(':')[1])||0;
   return out*(dev.splitterQty||1);
 }
@@ -834,7 +834,7 @@ function getSelectedDeviceSplitter(selectId) {
   const p=getProject(); if(!p)return null;
   const did=document.getElementById(selectId).value;
   const d=p.devices.find(x=>x.id===did);
-  if(!d||!d.splitterRatio||d.type!=='ODC')return null;
+  if(!d||!d.splitterRatio||(d.type!=='ODC'&&d.type!=='ODP'))return null;
   return d;
 }
 
@@ -982,7 +982,7 @@ function saveConnection() {
   if(fromDev&&toDev&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→ODP→TIANG)`);
   const coreCount=parseInt(document.getElementById('connCoreCount').value);
   const tubeConfig=getCurrentTubeConfig();
-  const splitterPort=(fromDev&&fromDev.type==='ODC'&&fromDev.splitterRatio)?parseInt(document.getElementById('connSplitterPort').value)||0:0;
+  const splitterPort=(fromDev&&(fromDev.type==='ODC'||fromDev.type==='ODP')&&fromDev.splitterRatio)?parseInt(document.getElementById('connSplitterPort').value)||0:0;
   const length=document.getElementById('connLength').value?parseFloat(document.getElementById('connLength').value):null;
   const label=document.getElementById('connLabel').value.trim();
   document.querySelectorAll('#coreMapContainer .core-map-label').forEach((inp,i)=>{
@@ -1043,7 +1043,7 @@ function renderDeviceList() {
   countEl.textContent=q?`(${filtered.length}/${sorted.length})`:`(${sorted.length})`;
   if(q&&!filtered.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Tidak ditemukan</p>'; return; }
   el.innerHTML=filtered.map(d=>{
-    const splitterInfo=(d.type==='ODC'&&d.splitterRatio)?` | Splitter ${d.splitterRatio}${d.splitterQty>1?' x'+d.splitterQty:''}` :'';
+    const splitterInfo=((d.type==='ODC'||d.type==='ODP')&&d.splitterRatio)?` | Splitter ${d.splitterRatio}${d.splitterQty>1?' x'+d.splitterQty:''}` :'';
     return `
     <div class="device-item" ondblclick="showEditDevice('${d.id}')">
       <span class="device-type-badge badge-${d.type.toLowerCase()}">${d.type}</span>
@@ -1141,8 +1141,8 @@ function renderTreeHTML(node,conn) {
     `<div class="tree-children">${node.children.map(ch=>
       `<div class="tree-child">${renderTreeHTML(ch.device,ch.connection)}</div>`
     ).join('')}</div>`:'';
-  const splitterTag=(node.type==='ODC'&&node.splitterRatio)?`<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${node.splitterRatio}${node.splitterQty>1?' x'+node.splitterQty:''}</span>`:'';
-  const inputTag=(node.type==='ODC'&&node.splitterInput)?`<div class="node-loc" style="color:#92400e;font-style:italic">Input: ${esc(node.splitterInput)}</div>`:'';
+  const splitterTag=((node.type==='ODC'||node.type==='ODP')&&node.splitterRatio)?`<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${node.splitterRatio}${node.splitterQty>1?' x'+node.splitterQty:''}</span>`:'';
+  const inputTag=((node.type==='ODC'||node.type==='ODP')&&node.splitterInput)?`<div class="node-loc" style="color:#92400e;font-style:italic">Input: ${esc(node.splitterInput)}</div>`:'';
   return `${connInfo}
     <div class="node-box" ondblclick="showEditDevice('${node.id}')">
       <span class="device-type-badge badge-${node.type.toLowerCase()}">${node.type}</span>
@@ -1190,7 +1190,7 @@ function renderTable() {
     <div class="stat-card"><div class="stat-value" style="color:#b45309">${res}</div><div class="stat-label">Cadangan</div></div>
   </div>`;
 
-  const splitterDevices=p.devices.filter(d=>d.type==='ODC'&&d.splitterRatio);
+  const splitterDevices=p.devices.filter(d=>(d.type==='ODC'||d.type==='ODP')&&d.splitterRatio);
   const splitterDeviceIds=new Set(splitterDevices.map(d=>d.id));
 
   p.connections.forEach(c=>{
@@ -1204,8 +1204,8 @@ function renderTable() {
     const layout=getTubeLayout(c.coreCount, c.tubeConfig);
     const tcl=getTubeConfigLabel(c);
 
-    const fSplitter=(f.type==='ODC'&&f.splitterRatio)?` <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${f.splitterRatio}${f.splitterQty>1?' x'+f.splitterQty:''}</span>`:'';
-    const tSplitter=(t.type==='ODC'&&t.splitterRatio)?` <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${t.splitterRatio}${t.splitterQty>1?' x'+t.splitterQty:''}</span>`:'';
+    const fSplitter=((f.type==='ODC'||f.type==='ODP')&&f.splitterRatio)?` <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${f.splitterRatio}${f.splitterQty>1?' x'+f.splitterQty:''}</span>`:'';
+    const tSplitter=((t.type==='ODC'||t.type==='ODP')&&t.splitterRatio)?` <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:600">Splitter ${t.splitterRatio}${t.splitterQty>1?' x'+t.splitterQty:''}</span>`:'';
     html+=`<div class="segment-card">
       <div class="segment-header">
         <div class="segment-title">
@@ -1243,11 +1243,10 @@ function renderTable() {
   });
 
   if(splitterDevices.length) {
-    const childIds=new Set(p.connections.filter(c=>c.splitterPort&&splitterDeviceIds.has(c.from)).map(c=>c.to));
-    const topSplitters=splitterDevices.filter(d=>!childIds.has(d.id));
-    if(topSplitters.length) {
+    const odcSplitters=splitterDevices.filter(d=>d.type==='ODC');
+    if(odcSplitters.length) {
       html+=`<h3 style="font-size:14px;margin:20px 0 12px;color:var(--gray-700)">Pemetaan Splitter</h3>`;
-      topSplitters.forEach(dev=>{
+      odcSplitters.forEach(dev=>{
         const totalOut=getSplitterOutputCount(dev);
         const outConns=p.connections.filter(c=>c.from===dev.id && c.splitterPort);
         html+=`<div class="segment-card" style="margin-bottom:16px">
@@ -1394,19 +1393,15 @@ function printDocument() {
     <div class="print-section-title">DAFTAR PERANGKAT</div>
     <table class="print-summary-table">
       <thead><tr><th>No</th><th>Tipe</th><th>Nama</th><th>Lokasi</th><th>Splitter</th><th>Catatan</th></tr></thead>
-      <tbody>${[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]).map((d,i)=>`<tr><td>${i+1}</td><td>${d.type}</td><td>${esc(d.name)}</td><td>${esc(d.location)||'-'}</td><td>${(d.type==='ODC'&&d.splitterRatio)?d.splitterRatio+(d.splitterQty>1?' x'+d.splitterQty:''):'-'}</td><td>${esc(d.notes)||'-'}</td></tr>`).join('')}</tbody>
+      <tbody>${[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]).map((d,i)=>`<tr><td>${i+1}</td><td>${d.type}</td><td>${esc(d.name)}</td><td>${esc(d.location)||'-'}</td><td>${((d.type==='ODC'||d.type==='ODP')&&d.splitterRatio)?d.splitterRatio+(d.splitterQty>1?' x'+d.splitterQty:''):'-'}</td><td>${esc(d.notes)||'-'}</td></tr>`).join('')}</tbody>
     </table>
     <div class="print-footer">Dokumentasi Pemetaan Core FO - ${esc(p.name)} - ${dateStr}</div>
   </div>`;
 
   const splitterDevsPrint=p.devices.filter(d=>d.type==='ODC'&&d.splitterRatio);
   if(splitterDevsPrint.length) {
-    const spIds=new Set(splitterDevsPrint.map(d=>d.id));
-    const childIdsPrint=new Set(p.connections.filter(c=>c.splitterPort&&spIds.has(c.from)).map(c=>c.to));
-    const topSplittersPrint=splitterDevsPrint.filter(d=>!childIdsPrint.has(d.id));
-    if(topSplittersPrint.length) {
       ph+=`<div class="print-page"><div class="print-section-title">PEMETAAN SPLITTER</div>`;
-      topSplittersPrint.forEach(dev=>{
+      splitterDevsPrint.forEach(dev=>{
         const totalOut=getSplitterOutputCount(dev);
         const outConns=p.connections.filter(c=>c.from===dev.id && c.splitterPort);
         ph+=`<div style="margin-bottom:12px">
@@ -1430,7 +1425,6 @@ function printDocument() {
         ph+=`</tbody></table></div>`;
       });
       ph+=`<div class="print-footer">Dokumentasi Pemetaan Core FO - ${esc(p.name)} - ${dateStr}</div></div>`;
-    }
   }
 
   if(p.connections.length) {
@@ -1560,7 +1554,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{
 (async()=>{
   const ok = await loadFromServer();
   if(!ok) return;
-  appData.projects.forEach(p=>p.devices.forEach(d=>{if(d.type!=='ODC'){d.splitterRatio='';d.splitterQty=0;d.splitterInput='';}}));
+  appData.projects.forEach(p=>p.devices.forEach(d=>{if(d.type!=='ODC'&&d.type!=='ODP'){d.splitterRatio='';d.splitterQty=0;d.splitterInput='';}}));
   save();
   if(appData.projects.length) currentProjectId=appData.projects[0].id;
   renderAll();

@@ -609,6 +609,16 @@ const DEVICE_ORDER = {OLT:0,OTB:1,ODC:2,JB:3,ODP:4,TIANG:5};
 const STATUS_CYCLE = ['kosong','terpakai','cadangan'];
 const STATUS_LABELS = {kosong:'Kosong',terpakai:'Terpakai',cadangan:'Cadangan'};
 
+function getDeviceSortOrder(device, project) {
+  if(device.type!=='JB') return DEVICE_ORDER[device.type];
+  const parentConn=project.connections.find(c=>c.to===device.id);
+  if(parentConn) {
+    const parentDev=project.devices.find(d=>d.id===parentConn.from);
+    if(parentDev) return DEVICE_ORDER[parentDev.type]+0.5;
+  }
+  return DEVICE_ORDER['JB'];
+}
+
 let appData = { projects:[] };
 let currentProjectId = null;
 let currentCoreData = null;
@@ -826,7 +836,7 @@ function showEditConnection(cid) {
 }
 function populateDeviceSelects() {
   const p=getProject(); if(!p)return;
-  const sorted=[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]);
+  const sorted=[...p.devices].sort((a,b)=>getDeviceSortOrder(a,p)-getDeviceSortOrder(b,p));
   const opts=sorted.map(d=>`<option value="${d.id}">[${d.type}] ${esc(d.name)}</option>`).join('');
   document.getElementById('connFrom').innerHTML=opts;
   document.getElementById('connTo').innerHTML=opts;
@@ -1058,7 +1068,7 @@ function renderDeviceList() {
   if(!p) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Pilih proyek dulu</p>'; countEl.textContent=''; return; }
   if(!p.devices.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Belum ada perangkat</p>'; countEl.textContent=''; return; }
   const q=getSearchQuery();
-  const sorted=[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]);
+  const sorted=[...p.devices].sort((a,b)=>getDeviceSortOrder(a,p)-getDeviceSortOrder(b,p));
   const filtered=q?sorted.filter(d=>(d.type+' '+d.name+' '+(d.location||'')+' '+(d.notes||'')).toLowerCase().includes(q)):sorted;
   countEl.textContent=q?`(${filtered.length}/${sorted.length})`:`(${sorted.length})`;
   if(q&&!filtered.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Tidak ditemukan</p>'; return; }
@@ -1142,7 +1152,13 @@ function buildTree(project) {
   project.connections.forEach(c=>{
     if(dm[c.from]&&dm[c.to]) { dm[c.from].children.push({device:dm[c.to],connection:c}); childIds.add(c.to); }
   });
-  return project.devices.filter(d=>!childIds.has(d.id)).map(d=>dm[d.id]).sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]);
+  function sortChildren(node) {
+    node.children.sort((a,b)=>DEVICE_ORDER[a.device.type]-DEVICE_ORDER[b.device.type]);
+    node.children.forEach(ch=>sortChildren(ch.device));
+  }
+  const roots=project.devices.filter(d=>!childIds.has(d.id)).map(d=>dm[d.id]).sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]);
+  roots.forEach(r=>sortChildren(r));
+  return roots;
 }
 
 function renderTreeHTML(node,conn) {
@@ -1413,7 +1429,7 @@ function printDocument() {
     <div class="print-section-title">DAFTAR PERANGKAT</div>
     <table class="print-summary-table">
       <thead><tr><th>No</th><th>Tipe</th><th>Nama</th><th>Lokasi</th><th>Splitter</th><th>Catatan</th></tr></thead>
-      <tbody>${[...p.devices].sort((a,b)=>DEVICE_ORDER[a.type]-DEVICE_ORDER[b.type]).map((d,i)=>`<tr><td>${i+1}</td><td>${d.type}</td><td>${esc(d.name)}</td><td>${esc(d.location)||'-'}</td><td>${((d.type==='ODC'||d.type==='ODP')&&d.splitterRatio)?d.splitterRatio+(d.splitterQty>1?' x'+d.splitterQty:''):'-'}</td><td>${esc(d.notes)||'-'}</td></tr>`).join('')}</tbody>
+      <tbody>${[...p.devices].sort((a,b)=>getDeviceSortOrder(a,p)-getDeviceSortOrder(b,p)).map((d,i)=>`<tr><td>${i+1}</td><td>${d.type}</td><td>${esc(d.name)}</td><td>${esc(d.location)||'-'}</td><td>${((d.type==='ODC'||d.type==='ODP')&&d.splitterRatio)?d.splitterRatio+(d.splitterQty>1?' x'+d.splitterQty:''):'-'}</td><td>${esc(d.notes)||'-'}</td></tr>`).join('')}</tbody>
     </table>
     <div class="print-footer">Dokumentasi Pemetaan Core FO - ${esc(p.name)} - ${dateStr}</div>
   </div>`;

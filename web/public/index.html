@@ -485,10 +485,10 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
       <div class="form-row">
         <div class="form-group"><label>Jumlah Core Kabel</label>
           <select id="connCoreCount" onchange="onCoreCountChange()">
-            <option value="1">1 Core</option><option value="2">2 Core</option>
-            <option value="4">4 Core</option><option value="6">6 Core</option>
-            <option value="8">8 Core</option><option value="12" selected>12 Core</option>
-            <option value="24">24 Core</option>
+            <option value="1">1 Core (Dropcore)</option><option value="2">2 Core (Distribusi)</option>
+            <option value="4">4 Core (Distribusi)</option><option value="6">6 Core (Distribusi)</option>
+            <option value="8">8 Core (Distribusi)</option><option value="12" selected>12 Core (Distribusi)</option>
+            <option value="24">24 Core (Feeder)</option>
           </select>
         </div>
         <div class="form-group" id="tubeConfigGroup" style="display:none">
@@ -610,6 +610,13 @@ const STATUS_LABELS = {kosong:'Kosong',terpakai:'Terpakai',cadangan:'Cadangan'};
 let appData = { projects:[] };
 let currentProjectId = null;
 let currentCoreData = null;
+
+function getCableType(coreCount) {
+  if(coreCount<=1) return 'Dropcore';
+  if(coreCount<=6) return 'Distribusi';
+  if(coreCount<=12) return 'Distribusi';
+  return 'Feeder';
+}
 
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 
@@ -1098,7 +1105,7 @@ function renderConnectionList() {
     <div class="device-item" ondblclick="showEditConnection('${c.id}')">
       <div class="device-item-info">
         <div class="device-item-name" style="font-size:12px">${esc(f.name)} &rarr; ${esc(t.name)}</div>
-        <div class="device-item-loc">${c.coreCount}C${tcl?' ('+tcl+')':''}${c.splitterPort?' | Port '+c.splitterPort:''} | ${used}/${c.coreCount} terpakai${c.label?' | '+esc(c.label):''}</div>
+        <div class="device-item-loc">${getCableType(c.coreCount)} ${c.coreCount}C${tcl?' ('+tcl+')':''}${c.splitterPort?' | Port '+c.splitterPort:''} | ${used}/${c.coreCount} terpakai${c.label?' | '+esc(c.label):''}</div>
       </div>
       <div class="device-item-actions">
         <button class="btn-icon" onclick="showEditConnection('${c.id}')" title="Edit">&#9998;</button>
@@ -1147,7 +1154,7 @@ function renderTreeHTML(node,conn) {
   }
   const tcl=conn?getTubeConfigLabel(conn):'';
   const portTag=conn&&conn.splitterPort?`<span style="font-size:10px;background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:4px;font-weight:600">Port ${conn.splitterPort}</span>`:'';
-  const connInfo=conn?`<div class="conn-label">${portTag} ${conn.coreCount}C${tcl?' ('+tcl+')':''}${conn.length?' &middot; '+conn.length+'m':''}${conn.label?' &middot; '+esc(conn.label):''}<span class="core-mini">${coreMini}</span></div>`:'';
+  const connInfo=conn?`<div class="conn-label">${portTag} <strong>${getCableType(conn.coreCount)}</strong> ${conn.coreCount}C${tcl?' ('+tcl+')':''}${conn.length?' &middot; '+conn.length+'m':''}${conn.label?' &middot; '+esc(conn.label):''}<span class="core-mini">${coreMini}</span></div>`:'';
   const childrenHtml=node.children.length?
     `<div class="tree-children">${node.children.map(ch=>
       `<div class="tree-child">${renderTreeHTML(ch.device,ch.connection)}</div>`
@@ -1223,7 +1230,7 @@ function renderTable() {
           <span class="device-type-badge badge-${f.type.toLowerCase()}">${f.type}</span>${esc(f.name)}${fSplitter} &rarr;
           <span class="device-type-badge badge-${t.type.toLowerCase()}">${t.type}</span>${esc(t.name)}${tSplitter}
         </div>
-        <div class="segment-meta">${c.coreCount} Core${tcl?' ('+tcl+')':''}${c.length?' | '+c.length+' m':''}${c.label?' | '+esc(c.label):''} | <span style="color:var(--danger)">${cu} terpakai</span>, <span style="color:var(--success)">${cf} kosong</span>${cr?', <span style="color:#b45309">'+cr+' cadangan</span>':''}</div>
+        <div class="segment-meta"><strong>${getCableType(c.coreCount)}</strong> ${c.coreCount} Core${tcl?' ('+tcl+')':''}${c.length?' | '+c.length+' m':''}${c.label?' | '+esc(c.label):''} | <span style="color:var(--danger)">${cu} terpakai</span>, <span style="color:var(--success)">${cf} kosong</span>${cr?', <span style="color:#b45309">'+cr+' cadangan</span>':''}</div>
       </div>
       <div class="core-visual-strip">${renderCoreVisualStrip(c)}</div>
       <table class="core-table">
@@ -1453,7 +1460,7 @@ function printDocument() {
       ph+=`<div class="print-segment-header">
         <span class="device-type-badge badge-${f.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${f.type}</span>${esc(f.name)} &rarr;
         <span class="device-type-badge badge-${t.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${t.type}</span>${esc(t.name)}
-        &mdash; ${c.coreCount} Core${tcl?' ('+tcl+')':''}${c.length?' | '+c.length+'m':''}${c.label?' | '+esc(c.label):''}
+        &mdash; ${getCableType(c.coreCount)} ${c.coreCount} Core${tcl?' ('+tcl+')':''}${c.length?' | '+c.length+'m':''}${c.label?' | '+esc(c.label):''}
         (Terpakai:${cu}, Kosong:${cf}${cr?', Cadangan:'+cr:''})
       </div>`;
 

@@ -999,7 +999,7 @@ function saveConnection() {
   if(from===to) return toast('Perangkat asal dan tujuan tidak boleh sama');
   const fromDev=p.devices.find(x=>x.id===from);
   const toDev=p.devices.find(x=>x.id===to);
-  if(fromDev&&toDev&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→JB→ODP→TIANG)`);
+  if(fromDev&&toDev&&fromDev.type!=='JB'&&toDev.type!=='JB'&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→ODP→TIANG)`);
   const coreCount=parseInt(document.getElementById('connCoreCount').value);
   const tubeConfig=getCurrentTubeConfig();
   const splitterPort=(fromDev&&(fromDev.type==='ODC'||fromDev.type==='JB'||fromDev.type==='ODP')&&fromDev.splitterRatio)?parseInt(document.getElementById('connSplitterPort').value)||0:0;

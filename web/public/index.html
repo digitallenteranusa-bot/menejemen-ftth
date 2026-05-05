@@ -913,26 +913,6 @@ function resetAllCores() {
   toast('Semua core direset ke kosong');
 }
 
-function getUsedCoresElsewhere() {
-  const p=getProject(); if(!p) return {};
-  const fromId=document.getElementById('connFrom').value;
-  const editingId=document.getElementById('connId').value;
-  const used={};
-  p.connections.forEach(c=>{
-    if(c.from===fromId && c.id!==editingId) {
-      const toDev=p.devices.find(d=>d.id===c.to);
-      c.cores.forEach(core=>{
-        if(core.status==='terpakai'||core.status==='cadangan') {
-          used[core.number]={status:core.status, label:core.label||'', dest:toDev?toDev.name:''};
-        }
-      });
-    }
-  });
-  return used;
-}
-
-let usedElsewhere={};
-
 function renderCoreMapInputs() {
   const count=parseInt(document.getElementById('connCoreCount').value);
   const tubeConfig=getCurrentTubeConfig();
@@ -942,7 +922,6 @@ function renderCoreMapInputs() {
     currentCoreData=[];
     for(let i=0;i<count;i++) { currentCoreData.push(old[i]||{number:i+1,status:'kosong',label:''}); currentCoreData[i].number=i+1; }
   }
-  usedElsewhere=getUsedCoresElsewhere();
   const container=document.getElementById('coreMapContainer');
   let html='';
   if(layout.tubeCount>1) {
@@ -972,23 +951,6 @@ function renderCoreMapItem(i, layout) {
   const cc=getCoreColor(core.number, layout);
   const textColor=cc.textColor||'white';
   const borderBase=cc.border||'rgba(0,0,0,0.2)';
-  const elsewhere=usedElsewhere[core.number];
-  if(elsewhere) {
-    const lbl=elsewhere.label||(elsewhere.dest?'→ '+elsewhere.dest:'Terpakai');
-    return `
-    <div class="core-map-item">
-      <div style="position:relative;display:inline-block">
-        <button type="button" class="core-map-btn status-terpakai"
-          style="background:${cc.hex};color:${textColor};cursor:not-allowed;opacity:0.6;filter:saturate(0.5);"
-          title="Core ${core.number} (${cc.name}) - Sudah dipakai: ${lbl}">
-          ${core.number}
-          <span class="core-btn-color-name">${cc.name}</span>
-        </button>
-      </div>
-      <span class="core-map-status-text s-terpakai" style="font-size:7px">Terpakai</span>
-      <div style="font-size:9px;color:var(--danger);text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(lbl)}">${esc(lbl)}</div>
-    </div>`;
-  }
   const isKosong=core.status==='kosong';
   return `
   <div class="core-map-item">
@@ -1009,7 +971,6 @@ function renderCoreMapItem(i, layout) {
 
 function toggleCore(i) {
   if(currentCoreData[i].status!=='kosong') return;
-  if(usedElsewhere[currentCoreData[i].number]) return;
   currentCoreData[i].status='terpakai';
   renderCoreMapInputs();
   setTimeout(()=>{const inp=document.getElementById('coreInput'+i);if(inp)inp.focus();},50);

@@ -513,6 +513,13 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
       <div class="form-row">
         <div class="form-group"><label>Label / Keterangan</label><input type="text" id="connLabel" placeholder="contoh: Feeder utara"></div>
       </div>
+      <div class="form-group" id="internalSplitterGroup" style="display:none">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500">
+          <input type="checkbox" id="connInternalSplitter" onchange="onInternalSplitterChange()">
+          Koneksi Internal Splitter (tanpa kabel fisik)
+        </label>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:2px">Centang jika koneksi antar splitter dalam satu perangkat fisik yang sama</div>
+      </div>
       <div class="form-group">
         <label>Pemetaan Core (klik core untuk ubah status)</label>
         <div class="core-legend" style="justify-content:space-between">
@@ -791,6 +798,8 @@ function showAddConnection() {
   document.getElementById('splitterHint').style.display='none';
   document.getElementById('connSplitterPort').value='';
   document.getElementById('splitterPortGroup').style.display='none';
+  document.getElementById('connInternalSplitter').checked=false;
+  document.getElementById('internalSplitterGroup').style.display='none';
   currentCoreData=null;
   renderCoreMapInputs();
   onConnDeviceChange();
@@ -810,6 +819,7 @@ function showEditConnection(cid) {
   document.getElementById('connLength').value=c.length||'';
   document.getElementById('connLabel').value=c.label||'';
   document.getElementById('connSplitterPort').value=c.splitterPort||'';
+  document.getElementById('connInternalSplitter').checked=!!c.internal;
   currentCoreData=JSON.parse(JSON.stringify(c.cores));
   renderCoreMapInputs();
   onConnDeviceChange();
@@ -887,7 +897,15 @@ function onConnDeviceChange() {
     portSelect.innerHTML='<option value="">--</option>';
   }
 
-  // Auto-fill untuk koneksi baru
+  const internalGroup=document.getElementById('internalSplitterGroup');
+  if(fromDev&&toDev) {
+    internalGroup.style.display='';
+  } else {
+    internalGroup.style.display='none';
+    document.getElementById('connInternalSplitter').checked=false;
+  }
+  renderCoreMapInputs();
+
   if(!document.getElementById('connId').value && currentCoreData) {
     const allKosong=currentCoreData.every(c=>c.status==='kosong'&&!c.label);
     if(allKosong && (fromDev||toDev)) autoFillBySplitter();
@@ -935,10 +953,11 @@ function resetAllCores() {
 }
 
 function isInternalSplitterConnection() {
-  const fromId=document.getElementById('connFrom').value;
-  const toId=document.getElementById('connTo').value;
-  if(fromId!==toId) return false;
-  return !!(getSelectedDeviceSplitter('connFrom'));
+  return document.getElementById('connInternalSplitter').checked;
+}
+
+function onInternalSplitterChange() {
+  renderCoreMapInputs();
 }
 
 function renderCoreMapInputs() {
@@ -1036,25 +1055,25 @@ function saveConnection() {
   const id=document.getElementById('connId').value;
   const from=document.getElementById('connFrom').value;
   const to=document.getElementById('connTo').value;
+  if(from===to) return toast('Perangkat asal dan tujuan tidak boleh sama');
   const fromDev=p.devices.find(x=>x.id===from);
   const toDev=p.devices.find(x=>x.id===to);
-  if(from===to) {
-    if(!fromDev||!fromDev.splitterRatio||(fromDev.type!=='ODC'&&fromDev.type!=='ODP')) return toast('Koneksi internal hanya untuk perangkat dengan splitter (ODC/ODP)');
-  } else if(fromDev&&toDev&&fromDev.type!=='JB'&&toDev.type!=='JB'&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→ODP→TIANG)`);
+  if(!document.getElementById('connInternalSplitter').checked&&fromDev&&toDev&&fromDev.type!=='JB'&&toDev.type!=='JB'&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→ODP→TIANG)`);
   const coreCount=parseInt(document.getElementById('connCoreCount').value);
   const tubeConfig=getCurrentTubeConfig();
   const splitterPort=(fromDev&&(fromDev.type==='ODC'||fromDev.type==='ODP')&&fromDev.splitterRatio)?parseInt(document.getElementById('connSplitterPort').value)||0:0;
   const length=document.getElementById('connLength').value?parseFloat(document.getElementById('connLength').value):null;
   const label=document.getElementById('connLabel').value.trim();
+  const internal=document.getElementById('connInternalSplitter').checked;
   document.querySelectorAll('#coreMapContainer .core-map-label').forEach(inp=>{
     const idx=parseInt(inp.id.replace('coreInput',''));
     if(!isNaN(idx)&&currentCoreData[idx]) currentCoreData[idx].label=inp.value.trim();
   });
   if(id) {
     const c=p.connections.find(x=>x.id===id);
-    if(c){c.from=from;c.to=to;c.coreCount=coreCount;c.tubeConfig=tubeConfig;c.splitterPort=splitterPort;c.length=length;c.label=label;c.cores=JSON.parse(JSON.stringify(currentCoreData));}
+    if(c){c.from=from;c.to=to;c.coreCount=coreCount;c.tubeConfig=tubeConfig;c.splitterPort=splitterPort;c.length=length;c.label=label;c.internal=internal;c.cores=JSON.parse(JSON.stringify(currentCoreData));}
   } else {
-    p.connections.push({id:uid(),from,to,coreCount,tubeConfig,splitterPort,length,label,cores:JSON.parse(JSON.stringify(currentCoreData))});
+    p.connections.push({id:uid(),from,to,coreCount,tubeConfig,splitterPort,length,label,internal,cores:JSON.parse(JSON.stringify(currentCoreData))});
   }
   save(); hideModal('connectionModal'); renderAll(); toast('Koneksi disimpan');
 }
@@ -1148,8 +1167,8 @@ function renderConnectionList() {
     return `
     <div class="device-item" ondblclick="showEditConnection('${c.id}')">
       <div class="device-item-info">
-        <div class="device-item-name" style="font-size:12px">${c.from===c.to?`&#128260; ${esc(f.name)} (Internal)`:`${esc(f.name)} &rarr; ${esc(t.name)}`}</div>
-        <div class="device-item-loc">${c.from===c.to?'Splitter Internal':getCableType(c.coreCount)+' '+c.coreCount+'C'+(tcl?' ('+tcl+')':'')}${c.splitterPort?' | Port '+c.splitterPort:''} | ${used}/${c.coreCount} terpakai${c.label?' | '+esc(c.label):''}</div>
+        <div class="device-item-name" style="font-size:12px">${c.internal?`&#128260; ${esc(f.name)} &harr; ${esc(t.name)} (Internal)`:`${esc(f.name)} &rarr; ${esc(t.name)}`}</div>
+        <div class="device-item-loc">${c.internal?'Splitter Internal':getCableType(c.coreCount)+' '+c.coreCount+'C'+(tcl?' ('+tcl+')':'')}${c.splitterPort?' | Port '+c.splitterPort:''} | ${used}/${c.coreCount} terpakai${c.label?' | '+esc(c.label):''}</div>
       </div>
       <div class="device-item-actions">
         <button class="btn-icon" onclick="showEditConnection('${c.id}')" title="Edit">&#9998;</button>

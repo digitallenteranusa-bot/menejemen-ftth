@@ -1028,9 +1028,9 @@ function saveConnection() {
   });
   if(id) {
     const c=p.connections.find(x=>x.id===id);
-    if(c){c.from=from;c.to=to;c.coreCount=coreCount;c.tubeConfig=tubeConfig;c.splitterPort=splitterPort;c.length=length;c.label=label;c.cores=currentCoreData;}
+    if(c){c.from=from;c.to=to;c.coreCount=coreCount;c.tubeConfig=tubeConfig;c.splitterPort=splitterPort;c.length=length;c.label=label;c.cores=JSON.parse(JSON.stringify(currentCoreData));}
   } else {
-    p.connections.push({id:uid(),from,to,coreCount,tubeConfig,splitterPort,length,label,cores:currentCoreData});
+    p.connections.push({id:uid(),from,to,coreCount,tubeConfig,splitterPort,length,label,cores:JSON.parse(JSON.stringify(currentCoreData))});
   }
   save(); hideModal('connectionModal'); renderAll(); toast('Koneksi disimpan');
 }

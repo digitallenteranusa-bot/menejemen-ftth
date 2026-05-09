@@ -1501,8 +1501,8 @@ function printDocument() {
     <div class="print-tree">${document.getElementById('diagramView').innerHTML}</div>
     <div class="print-section-title">DAFTAR PERANGKAT</div>
     <table class="print-summary-table">
-      <thead><tr><th>No</th><th>Tipe</th><th>Nama</th><th>Lokasi</th><th>Splitter</th><th>Catatan</th></tr></thead>
-      <tbody>${[...p.devices].sort((a,b)=>getDeviceSortOrder(a,p)-getDeviceSortOrder(b,p)).map((d,i)=>`<tr><td>${i+1}</td><td>${d.type}</td><td>${esc(d.name)}</td><td>${esc(d.location)||'-'}</td><td>${((d.type==='ODC'||d.type==='ODP')&&d.splitterRatio)?d.splitterRatio+(d.splitterQty>1?' x'+d.splitterQty:''):'-'}</td><td>${esc(d.notes)||'-'}</td></tr>`).join('')}</tbody>
+      <thead><tr><th>No</th><th>Tipe</th><th>Nama</th><th>Lokasi</th><th>Tiang</th><th>Splitter</th><th>Catatan</th></tr></thead>
+      <tbody>${[...p.devices].sort((a,b)=>getDeviceSortOrder(a,p)-getDeviceSortOrder(b,p)).map((d,i)=>`<tr><td>${i+1}</td><td>${d.type}</td><td>${esc(d.name)}</td><td>${esc(d.location)||'-'}</td><td>${esc(d.tiang)||'-'}</td><td>${((d.type==='ODC'||d.type==='ODP')&&d.splitterRatio)?d.splitterRatio+(d.splitterQty>1?' x'+d.splitterQty:''):'-'}</td><td>${esc(d.notes)||'-'}</td></tr>`).join('')}</tbody>
     </table>
     <div class="print-footer">Dokumentasi Pemetaan Core FO - ${esc(p.name)} - ${dateStr}</div>
   </div>`;

@@ -1043,8 +1043,9 @@ function saveConnection() {
   const splitterPort=(fromDev&&(fromDev.type==='ODC'||fromDev.type==='ODP')&&fromDev.splitterRatio)?parseInt(document.getElementById('connSplitterPort').value)||0:0;
   const length=document.getElementById('connLength').value?parseFloat(document.getElementById('connLength').value):null;
   const label=document.getElementById('connLabel').value.trim();
-  document.querySelectorAll('#coreMapContainer .core-map-label').forEach((inp,i)=>{
-    if(currentCoreData[i]) currentCoreData[i].label=inp.value.trim();
+  document.querySelectorAll('#coreMapContainer .core-map-label').forEach(inp=>{
+    const idx=parseInt(inp.id.replace('coreInput',''));
+    if(!isNaN(idx)&&currentCoreData[idx]) currentCoreData[idx].label=inp.value.trim();
   });
   if(id) {
     const c=p.connections.find(x=>x.id===id);

@@ -441,6 +441,15 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
         <div class="form-group"><label>Nama / Label</label><input type="text" id="deviceName" placeholder="contoh: OLT-01"></div>
       </div>
       <div class="form-group"><label>Lokasi</label><input type="text" id="deviceLocation" placeholder="contoh: Jl. Merdeka No.1"></div>
+      <div class="form-group"><label>Tiang</label>
+        <select id="deviceTiang">
+          <option value="">-- Pilih Tiang --</option>
+          <option value="Tiang Sendiri">Tiang Sendiri</option>
+          <option value="Telkom">Telkom</option>
+          <option value="Iforte">Iforte</option>
+          <option value="PLN">PLN</option>
+        </select>
+      </div>
       <div class="form-group" id="splitterGroup" style="display:none">
         <label>Splitter</label>
         <div class="form-row">
@@ -718,6 +727,7 @@ function showAddDevice() {
   document.getElementById('deviceType').value='OLT';
   document.getElementById('deviceName').value='';
   document.getElementById('deviceLocation').value='';
+  document.getElementById('deviceTiang').value='';
   document.getElementById('deviceSplitterRatio').value='';
   document.getElementById('deviceSplitterQty').value='1';
   document.getElementById('deviceSplitterInput').value='';
@@ -733,6 +743,7 @@ function showEditDevice(did) {
   document.getElementById('deviceType').value=d.type;
   document.getElementById('deviceName').value=d.name;
   document.getElementById('deviceLocation').value=d.location||'';
+  document.getElementById('deviceTiang').value=d.tiang||'';
   const hasSplitter=(d.type==='ODC'||d.type==='ODP');
   document.getElementById('splitterGroup').style.display=hasSplitter?'':'none';
   document.getElementById('deviceSplitterRatio').value=d.splitterRatio||'';
@@ -748,6 +759,7 @@ function saveDevice() {
   const name=document.getElementById('deviceName').value.trim();
   if(!name) return toast('Nama perangkat wajib diisi');
   const location=document.getElementById('deviceLocation').value.trim();
+  const tiang=document.getElementById('deviceTiang').value;
   const notes=document.getElementById('deviceNotes').value.trim();
   const isSplitterDev=(type==='ODC'||type==='ODP');
   const splitterRatio=isSplitterDev?document.getElementById('deviceSplitterRatio').value:'';
@@ -755,9 +767,9 @@ function saveDevice() {
   const splitterInput=isSplitterDev?document.getElementById('deviceSplitterInput').value.trim():'';
   if(id) {
     const d=p.devices.find(x=>x.id===id);
-    if(d){d.type=type;d.name=name;d.location=location;d.notes=notes;d.splitterRatio=splitterRatio;d.splitterQty=splitterQty;d.splitterInput=splitterInput;}
+    if(d){d.type=type;d.name=name;d.location=location;d.tiang=tiang;d.notes=notes;d.splitterRatio=splitterRatio;d.splitterQty=splitterQty;d.splitterInput=splitterInput;}
   } else {
-    p.devices.push({id:uid(),type,name,location,notes,splitterRatio,splitterQty,splitterInput});
+    p.devices.push({id:uid(),type,name,location,tiang,notes,splitterRatio,splitterQty,splitterInput});
   }
   save(); hideModal('deviceModal'); renderAll(); toast('Perangkat disimpan');
 }
@@ -1125,12 +1137,13 @@ function renderDeviceList() {
   if(q&&!filtered.length) { el.innerHTML='<p style="color:var(--gray-400);font-size:12px;text-align:center;padding:12px">Tidak ditemukan</p>'; return; }
   el.innerHTML=filtered.map(d=>{
     const splitterInfo=((d.type==='ODC'||d.type==='ODP')&&d.splitterRatio)?` | Splitter ${d.splitterRatio}${d.splitterQty>1?' x'+d.splitterQty:''}` :'';
+    const tiangInfo=d.tiang?` | ${d.tiang}`:'';
     return `
     <div class="device-item" ondblclick="showEditDevice('${d.id}')">
       <span class="device-type-badge badge-${d.type.toLowerCase()}">${d.type}</span>
       <div class="device-item-info">
         <div class="device-item-name">${esc(d.name)}</div>
-        <div class="device-item-loc">${esc(d.location)||''}${splitterInfo}</div>
+        <div class="device-item-loc">${esc(d.location)||''}${tiangInfo}${splitterInfo}</div>
       </div>
       <div class="device-item-actions">
         <button class="btn-icon" onclick="showEditDevice('${d.id}')" title="Edit">&#9998;</button>

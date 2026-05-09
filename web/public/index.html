@@ -935,10 +935,15 @@ function resetAllCores() {
   toast('Semua core direset ke kosong');
 }
 
+function isSplitterConnection() {
+  return !!(getSelectedDeviceSplitter('connFrom')||getSelectedDeviceSplitter('connTo'));
+}
+
 function renderCoreMapInputs() {
   const count=parseInt(document.getElementById('connCoreCount').value);
   const tubeConfig=getCurrentTubeConfig();
   const layout=getTubeLayout(count, tubeConfig);
+  const isSplitter=isSplitterConnection();
   if(!currentCoreData||currentCoreData.length!==count) {
     const old=currentCoreData||[];
     currentCoreData=[];
@@ -946,7 +951,7 @@ function renderCoreMapInputs() {
   }
   const container=document.getElementById('coreMapContainer');
   let html='';
-  if(layout.tubeCount>1) {
+  if(!isSplitter && layout.tubeCount>1) {
     for(let t=0;t<layout.tubeCount;t++) {
       const tc=getTubeColor(t);
       const start=t*layout.coresPerTube;
@@ -957,29 +962,47 @@ function renderCoreMapInputs() {
           Tube ${t+1} - ${tc.name} (Core ${start+1}-${end})
         </div>
         <div class="core-map-grid">`;
-      for(let i=start;i<end;i++) html+=renderCoreMapItem(i, layout);
+      for(let i=start;i<end;i++) html+=renderCoreMapItem(i, layout, isSplitter);
       html+=`</div></div>`;
     }
   } else {
     html+=`<div class="core-map-grid">`;
-    for(let i=0;i<count;i++) html+=renderCoreMapItem(i, layout);
+    for(let i=0;i<count;i++) html+=renderCoreMapItem(i, layout, isSplitter);
     html+=`</div>`;
   }
   container.innerHTML=html;
 }
 
-function renderCoreMapItem(i, layout) {
+function renderCoreMapItem(i, layout, isSplitter) {
   const core=currentCoreData[i];
+  const isKosong=core.status==='kosong';
+  if(isSplitter) {
+    const statusColors={kosong:'#e5e7eb',terpakai:'#fca5a5',cadangan:'#fde68a'};
+    const statusTextColors={kosong:'#374151',terpakai:'#991b1b',cadangan:'#92400e'};
+    return `
+    <div class="core-map-item">
+      <div style="position:relative;display:inline-block">
+        <button type="button" class="core-map-btn status-${core.status}"
+          style="background:${statusColors[core.status]||'#e5e7eb'};color:${statusTextColors[core.status]||'#374151'};border-color:${statusColors[core.status]||'#d1d5db'};cursor:pointer;"
+          onclick="toggleCore(${i})"
+          title="Port ${core.number} - ${STATUS_LABELS[core.status]}">
+          ${core.number}
+        </button>
+        ${!isKosong?`<button type="button" onclick="resetCore(${i})" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:white;border:2px solid white;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1" title="Reset ke kosong">&times;</button>`:''}
+      </div>
+      <span class="core-map-status-text s-${core.status}">${STATUS_LABELS[core.status]}</span>
+      ${isKosong?`<div style="height:22px"></div>`:`<input class="core-map-label" type="text" value="${esc(core.label)}" placeholder="ket." onchange="updateCoreLabel(${i},this.value)" id="coreInput${i}">`}
+    </div>`;
+  }
   const cc=getCoreColor(core.number, layout);
   const textColor=cc.textColor||'white';
   const borderBase=cc.border||'rgba(0,0,0,0.2)';
-  const isKosong=core.status==='kosong';
   return `
   <div class="core-map-item">
     <div style="position:relative;display:inline-block">
       <button type="button" class="core-map-btn status-${core.status}"
-        style="background:${cc.hex};color:${textColor};border-color:${isKosong?borderBase:''};${!isKosong?'cursor:default;':'cursor:pointer;'}"
-        ${isKosong?`onclick="toggleCore(${i})"`:''}
+        style="background:${cc.hex};color:${textColor};border-color:${isKosong?borderBase:''};cursor:pointer;"
+        onclick="toggleCore(${i})"
         title="Core ${core.number} (${cc.name}) - ${STATUS_LABELS[core.status]}">
         ${core.number}
         <span class="core-btn-color-name">${cc.name}</span>
@@ -992,10 +1015,12 @@ function renderCoreMapItem(i, layout) {
 }
 
 function toggleCore(i) {
-  if(currentCoreData[i].status!=='kosong') return;
-  currentCoreData[i].status='terpakai';
+  const cur=currentCoreData[i].status;
+  const next=STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur)+1)%STATUS_CYCLE.length];
+  currentCoreData[i].status=next;
+  if(next==='kosong') currentCoreData[i].label='';
   renderCoreMapInputs();
-  setTimeout(()=>{const inp=document.getElementById('coreInput'+i);if(inp)inp.focus();},50);
+  if(next!=='kosong') setTimeout(()=>{const inp=document.getElementById('coreInput'+i);if(inp)inp.focus();},50);
 }
 function resetCore(i) {
   currentCoreData[i].status='kosong';

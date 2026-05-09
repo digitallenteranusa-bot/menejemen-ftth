@@ -935,15 +935,18 @@ function resetAllCores() {
   toast('Semua core direset ke kosong');
 }
 
-function isSplitterConnection() {
-  return !!(getSelectedDeviceSplitter('connFrom')||getSelectedDeviceSplitter('connTo'));
+function isInternalSplitterConnection() {
+  const fromId=document.getElementById('connFrom').value;
+  const toId=document.getElementById('connTo').value;
+  if(fromId!==toId) return false;
+  return !!(getSelectedDeviceSplitter('connFrom'));
 }
 
 function renderCoreMapInputs() {
   const count=parseInt(document.getElementById('connCoreCount').value);
   const tubeConfig=getCurrentTubeConfig();
   const layout=getTubeLayout(count, tubeConfig);
-  const isSplitter=isSplitterConnection();
+  const isSplitter=isInternalSplitterConnection();
   if(!currentCoreData||currentCoreData.length!==count) {
     const old=currentCoreData||[];
     currentCoreData=[];
@@ -1034,10 +1037,11 @@ function saveConnection() {
   const id=document.getElementById('connId').value;
   const from=document.getElementById('connFrom').value;
   const to=document.getElementById('connTo').value;
-  if(from===to) return toast('Perangkat asal dan tujuan tidak boleh sama');
   const fromDev=p.devices.find(x=>x.id===from);
   const toDev=p.devices.find(x=>x.id===to);
-  if(fromDev&&toDev&&fromDev.type!=='JB'&&toDev.type!=='JB'&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→ODP→TIANG)`);
+  if(from===to) {
+    if(!fromDev||!fromDev.splitterRatio||(fromDev.type!=='ODC'&&fromDev.type!=='ODP')) return toast('Koneksi internal hanya untuk perangkat dengan splitter (ODC/ODP)');
+  } else if(fromDev&&toDev&&fromDev.type!=='JB'&&toDev.type!=='JB'&&DEVICE_ORDER[fromDev.type]>DEVICE_ORDER[toDev.type]) return toast(`Tidak bisa menghubungkan ${fromDev.type} ke ${toDev.type} (arah koneksi harus ke bawah: OLT→OTB→ODC→ODP→TIANG)`);
   const coreCount=parseInt(document.getElementById('connCoreCount').value);
   const tubeConfig=getCurrentTubeConfig();
   const splitterPort=(fromDev&&(fromDev.type==='ODC'||fromDev.type==='ODP')&&fromDev.splitterRatio)?parseInt(document.getElementById('connSplitterPort').value)||0:0;
@@ -1145,8 +1149,8 @@ function renderConnectionList() {
     return `
     <div class="device-item" ondblclick="showEditConnection('${c.id}')">
       <div class="device-item-info">
-        <div class="device-item-name" style="font-size:12px">${esc(f.name)} &rarr; ${esc(t.name)}</div>
-        <div class="device-item-loc">${getCableType(c.coreCount)} ${c.coreCount}C${tcl?' ('+tcl+')':''}${c.splitterPort?' | Port '+c.splitterPort:''} | ${used}/${c.coreCount} terpakai${c.label?' | '+esc(c.label):''}</div>
+        <div class="device-item-name" style="font-size:12px">${c.from===c.to?`&#128260; ${esc(f.name)} (Internal)`:`${esc(f.name)} &rarr; ${esc(t.name)}`}</div>
+        <div class="device-item-loc">${c.from===c.to?'Splitter Internal':getCableType(c.coreCount)+' '+c.coreCount+'C'+(tcl?' ('+tcl+')':'')}${c.splitterPort?' | Port '+c.splitterPort:''} | ${used}/${c.coreCount} terpakai${c.label?' | '+esc(c.label):''}</div>
       </div>
       <div class="device-item-actions">
         <button class="btn-icon" onclick="showEditConnection('${c.id}')" title="Edit">&#9998;</button>

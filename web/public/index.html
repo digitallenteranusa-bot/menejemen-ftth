@@ -298,6 +298,42 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 }
 .toast.show { opacity:1; transform:translateY(0); }
 
+/* MOBILE TOGGLE */
+.sidebar-toggle { display:none; background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; }
+.sidebar-toggle:hover { background:rgba(255,255,255,0.2); }
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:19; }
+.sidebar-overlay.show { display:block; }
+
+@media (max-width:768px) {
+  .sidebar-toggle { display:block; }
+  header { padding:8px 12px; gap:8px; flex-wrap:wrap; }
+  header h1 { font-size:14px; flex:1; min-width:0; }
+  .header-actions { gap:4px; flex-wrap:wrap; width:100%; justify-content:flex-end; }
+  .header-actions select { min-width:0; flex:1; font-size:12px; padding:5px 8px; }
+  .header-actions .btn { padding:4px 8px; font-size:11px; }
+  #sidebar {
+    position:fixed; left:-320px; top:0; bottom:0; width:300px; min-width:0;
+    z-index:20; transition:left 0.25s ease; box-shadow:var(--shadow-lg);
+  }
+  #sidebar.open { left:0; }
+  .main-layout { flex-direction:column; }
+  main { min-width:0; }
+  .tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .tab { white-space:nowrap; padding:10px 14px; font-size:12px; }
+  .tab-content { padding:12px; }
+  .modal { width:96%; max-width:none; margin:8px; }
+  .form-row { flex-direction:column; gap:0; }
+  .stats-row { gap:8px; }
+  .stat-card { min-width:calc(50% - 8px); padding:10px 12px; }
+  .stat-value { font-size:20px; }
+  .node-box { padding:6px 10px; font-size:12px; }
+  .tree-children { margin-left:16px; }
+  .tree-child { padding-left:16px; }
+  .tree-child::before { width:16px; }
+  .core-map-grid { gap:4px; }
+  .core-map-item { width:60px; }
+}
+
 /* PRINT STYLES */
 #printView { display:none; }
 @media print {
@@ -351,6 +387,7 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 
 <div id="app">
   <header>
+    <button class="sidebar-toggle" onclick="toggleSidebar()">&#9776;</button>
     <h1>&#128225; Pemetaan Core Fiber Optic</h1>
     <div class="header-actions">
       <select id="projectSelect" onchange="switchProject(this.value)">
@@ -366,6 +403,7 @@ main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
     </div>
   </header>
   <div class="main-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     <aside id="sidebar">
       <div class="sidebar-section" id="projectInfo" style="display:none">
         <h3>Proyek Aktif</h3>
@@ -672,6 +710,11 @@ function save() {
 async function doLogout() {
   await fetch('/api/logout',{method:'POST'});
   window.location='/login.html';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
 }
 
 function getProject() { return appData.projects.find(p=>p.id===currentProjectId)||null; }

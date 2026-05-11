@@ -50,7 +50,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     maxAge: 30 * 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === 'production',
+    secure: 'auto',
     sameSite: 'lax'
   }
 }));
@@ -66,21 +66,6 @@ app.get('/', (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.post('/api/register', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Username dan password wajib diisi' });
-  if (password.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' });
-  try {
-    const r = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username.trim(), hashPw(password));
-    req.session.uid = r.lastInsertRowid;
-    req.session.uname = username.trim();
-    res.json({ ok: true });
-  } catch (e) {
-    if (e.message.includes('UNIQUE')) return res.status(400).json({ error: 'Username sudah digunakan' });
-    res.status(500).json({ error: 'Gagal registrasi' });
-  }
-});
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;

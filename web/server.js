@@ -1,5 +1,7 @@
 const express = require('express');
 const session = require('express-session');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const Database = require('better-sqlite3');
 const crypto = require('crypto');
 const path = require('path');
@@ -43,7 +45,8 @@ function verifyPw(pw, stored) {
 }
 
 app.set('trust proxy', 1);
-app.use(express.json({ limit: '50mb' }));
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json({ limit: '5mb' }));
 app.use(session({
   secret: sessionSecret,
   resave: false,
@@ -51,9 +54,18 @@ app.use(session({
   cookie: {
     maxAge: 30 * 24 * 60 * 60 * 1000,
     secure: 'auto',
-    sameSite: 'lax'
+    sameSite: 'lax',
+    httpOnly: true
   }
 }));
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Terlalu banyak percobaan login, coba lagi setelah 15 menit' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
 function auth(req, res, next) {
   if (req.session.uid) return next();
@@ -67,7 +79,7 @@ app.get('/', (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
   const u = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
   if (!u || !verifyPw(password, u.password)) return res.status(401).json({ error: 'Username atau password salah' });

@@ -42,12 +42,17 @@ function verifyPw(pw, stored) {
   return crypto.scryptSync(pw, salt, 64).toString('hex') === hash;
 }
 
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '50mb' }));
 app.use(session({
   secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
+  cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
 }));
 
 function auth(req, res, next) {
